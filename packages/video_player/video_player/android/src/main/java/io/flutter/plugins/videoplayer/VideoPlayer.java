@@ -61,7 +61,8 @@ final class VideoPlayer {
       EventChannel eventChannel,
       TextureRegistry.SurfaceTextureEntry textureEntry,
       String dataSource,
-      String formatHint) {
+      String formatHint,
+      int location) {
     this.eventChannel = eventChannel;
     this.textureEntry = textureEntry;
 
@@ -87,6 +88,7 @@ final class VideoPlayer {
     exoPlayer.prepare(mediaSource);
 
     setupVideoPlayer(eventChannel, textureEntry);
+    seekTo(location);
   }
 
   private static boolean isHTTP(Uri uri) {

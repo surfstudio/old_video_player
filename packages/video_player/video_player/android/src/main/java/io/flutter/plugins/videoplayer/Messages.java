@@ -81,12 +81,15 @@ public class Messages {
       this.formatHint = setterArg;
     }
 
+    public int location;
+
     HashMap toMap() {
       HashMap<String, Object> toMapResult = new HashMap<String, Object>();
       toMapResult.put("asset", asset);
       toMapResult.put("uri", uri);
       toMapResult.put("packageName", packageName);
       toMapResult.put("formatHint", formatHint);
+      toMapResult.put("duration", location);
       return toMapResult;
     }
 
@@ -96,6 +99,7 @@ public class Messages {
       fromMapResult.uri = (String) map.get("uri");
       fromMapResult.packageName = (String) map.get("packageName");
       fromMapResult.formatHint = (String) map.get("formatHint");
+      fromMapResult.location = (int) map.get("duration");
       return fromMapResult;
     }
   }
