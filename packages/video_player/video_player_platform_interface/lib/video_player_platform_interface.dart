@@ -135,12 +135,15 @@ class DataSource {
   ///
   /// The [package] argument must be non-null when the asset comes from a
   /// package and null otherwise.
+  /// 
+  /// The [duration] time for initialization
   DataSource({
     @required this.sourceType,
     this.uri,
     this.formatHint,
     this.asset,
     this.package,
+    this.duration,
   });
 
   /// The way in which the video was originally loaded.
@@ -165,6 +168,9 @@ class DataSource {
   /// The package that the asset was loaded from. Only set for
   /// [DataSourceType.asset] videos.
   final String package;
+
+  /// Duration for initialization
+  final Duration duration;
 }
 
 /// The way in which the video was originally loaded.

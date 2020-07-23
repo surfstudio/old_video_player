@@ -18,8 +18,8 @@ import 'src/closed_caption_file.dart';
 export 'src/closed_caption_file.dart';
 
 final VideoPlayerPlatform _videoPlayerPlatform = VideoPlayerPlatform.instance
-  // This will clear all open videos on the platform when a full restart is
-  // performed.
+// This will clear all open videos on the platform when a full restart is
+// performed.
   ..init();
 
 /// The duration, current position, buffering state, error state and settings
@@ -234,7 +234,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   int get textureId => _textureId;
 
   /// Attempts to open the given [dataSource] and load metadata about the video.
-  Future<void> initialize() async {
+  Future<void> initialize({Duration duration = Duration.zero}) async {
     _lifeCycleObserver = _VideoAppLifeCycleObserver(this);
     _lifeCycleObserver.initialize();
     _creatingCompleter = Completer<void>();
@@ -246,6 +246,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           sourceType: DataSourceType.asset,
           asset: dataSource,
           package: package,
+          duration: duration,
         );
         break;
       case DataSourceType.network:
@@ -253,12 +254,14 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           sourceType: DataSourceType.network,
           uri: dataSource,
           formatHint: formatHint,
+          duration: duration,
         );
         break;
       case DataSourceType.file:
         dataSourceDescription = DataSource(
           sourceType: DataSourceType.file,
           uri: dataSource,
+          duration: duration,
         );
         break;
     }

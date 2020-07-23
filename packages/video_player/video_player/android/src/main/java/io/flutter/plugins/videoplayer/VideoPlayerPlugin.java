@@ -113,7 +113,8 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi {
               eventChannel,
               handle,
               "asset:///" + assetLookupKey,
-              null);
+              null,
+              arg.location);
       videoPlayers.put(handle.id(), player);
     } else {
       player =
@@ -122,7 +123,8 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi {
               eventChannel,
               handle,
               arg.getUri(),
-              arg.getFormatHint());
+              arg.getFormatHint(),
+              arg.location);
       videoPlayers.put(handle.id(), player);
     }
 
