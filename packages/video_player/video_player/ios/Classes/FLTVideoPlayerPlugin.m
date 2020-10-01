@@ -46,6 +46,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic, readonly) bool isPlaying;
 @property(nonatomic) bool isLooping;
 @property(nonatomic, readonly) bool isInitialized;
+@property(assign, nonatomic) int seekTime;
 - (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater;
 - (void)play;
 - (void)pause;
@@ -229,6 +230,8 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   _player = [AVPlayer playerWithPlayerItem:item];
   _player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
 
+  self.seekTime = -1;
+
   [self createVideoOutputAndDisplayLink:frameUpdater];
 
   [self addObservers:item];
@@ -338,6 +341,9 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (int64_t)position {
+  if (self.seekTime != -1)
+    return self.seekTime;
+
   return FLTCMTimeToMillis([_player currentTime]);
 }
 
@@ -346,9 +352,16 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (void)seekTo:(int)location {
-  [_player seekToTime:CMTimeMake(location, 1000)
-      toleranceBefore:kCMTimeZero
-       toleranceAfter:kCMTimeZero];
+  self.seekTime = location;
+  __weak typeof(self) weakSelf = self;
+  [_player seekToTime:CMTimeMake(location, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
+    if (!finished)
+      return;
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+      weakSelf.seekTime = -1;
+    });
+}];
 }
 
 - (void)setIsLooping:(bool)isLooping {
