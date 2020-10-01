@@ -93,6 +93,10 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
                                            selector:@selector(itemDidPlayToEndTime:)
                                                name:AVPlayerItemDidPlayToEndTimeNotification
                                              object:item];
+
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(itemFailedToPlayToEndTime:) name:AVPlayerItemNewErrorLogEntryNotification object:item];
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(itemFailedToPlayToEndTime:) name:AVPlayerItemFailedToPlayToEndTimeNotification object:item];
+
 }
 
 - (void)itemDidPlayToEndTime:(NSNotification*)notification {
@@ -104,6 +108,19 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
       _eventSink(@{@"event" : @"completed"});
     }
   }
+}
+
+- (void)itemFailedToPlayToEndTime:(NSNotification *)notification {
+    if (!_eventSink)
+        return;
+
+    NSError *error = notification.userInfo[AVPlayerItemFailedToPlayToEndTimeErrorKey];
+
+    if ((notification.name == AVPlayerItemFailedToPlayToEndTimeNotification) && error) {
+      _eventSink([FlutterError errorWithCode:@"VideoError" message:[@"Failed to load video: " stringByAppendingString:error.localizedDescription] details:nil]);
+    } else {
+      _eventSink([FlutterError errorWithCode:@"VideoError" message:nil details:nil]);
+    }
 }
 
 static inline CGFloat radiansToDegrees(CGFloat radians) {
