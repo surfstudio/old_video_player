@@ -47,6 +47,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic) bool isLooping;
 @property(nonatomic, readonly) bool isInitialized;
 @property(assign, nonatomic) int seekTime;
+@property(assign, nonatomic) int startTime;
 - (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater;
 - (void)play;
 - (void)pause;
@@ -249,6 +250,8 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
   self.seekTime = -1;
 
+  self.startTime = 600000;
+
   [self createVideoOutputAndDisplayLink:frameUpdater];
 
   [self addObservers:item];
@@ -287,9 +290,15 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
       case AVPlayerItemStatusUnknown:
         break;
       case AVPlayerItemStatusReadyToPlay:
+            NSLog(@"==> READY");
+        //[self.player seekToTime:CMTimeMake(self.startTime, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         [item addOutput:_videoOutput];
         [self sendInitialized];
         [self updatePlayingState];
+            if (self.startTime != -1) {
+                [self.player seekToTime:CMTimeMake(self.startTime, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+                self.startTime = -1;
+            }
         break;
     }
   } else if (context == playbackLikelyToKeepUpContext) {
@@ -360,6 +369,8 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 - (int64_t)position {
   if (self.seekTime != -1)
     return self.seekTime;
+
+    NSLog(@"==> duration %lld", FLTCMTimeToMillis([_player currentTime]));
 
   return FLTCMTimeToMillis([_player currentTime]);
 }
