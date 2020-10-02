@@ -290,8 +290,6 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
       case AVPlayerItemStatusUnknown:
         break;
       case AVPlayerItemStatusReadyToPlay:
-            NSLog(@"==> READY");
-        //[self.player seekToTime:CMTimeMake(self.startTime, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         [item addOutput:_videoOutput];
         [self sendInitialized];
         [self updatePlayingState];
@@ -369,8 +367,6 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 - (int64_t)position {
   if (self.seekTime != -1)
     return self.seekTime;
-
-    NSLog(@"==> duration %lld", FLTCMTimeToMillis([_player currentTime]));
 
   return FLTCMTimeToMillis([_player currentTime]);
 }
@@ -536,10 +532,14 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
       assetPath = [_registrar lookupKeyForAsset:input.asset];
     }
     player = [[FLTVideoPlayer alloc] initWithAsset:assetPath frameUpdater:frameUpdater];
+    if (input.startTime.intValue > 0)
+      player.startTime = input.startTime.intValue;
     return [self onPlayerSetup:player frameUpdater:frameUpdater];
   } else if (input.uri) {
     player = [[FLTVideoPlayer alloc] initWithURL:[NSURL URLWithString:input.uri]
                                     frameUpdater:frameUpdater];
+    if (input.startTime.intValue > 0)
+      player.startTime = input.startTime.intValue;
     return [self onPlayerSetup:player frameUpdater:frameUpdater];
   } else {
     *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];
