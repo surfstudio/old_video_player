@@ -86,7 +86,7 @@ static NSDictionary *wrapResult(NSDictionary *result, FlutterError *error) {
   }
   result.startTime = dict[@"duration"];
   if ((NSNull *)result.startTime == [NSNull null]) {
-    result.formatHint = nil;
+    result.startTime = nil;
   }
   return result;
 }
