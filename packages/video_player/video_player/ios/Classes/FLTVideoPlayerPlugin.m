@@ -119,7 +119,7 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
     if ((notification.name == AVPlayerItemFailedToPlayToEndTimeNotification) && error) {
       _eventSink([FlutterError errorWithCode:@"VideoError" message:[@"Failed to load video: " stringByAppendingString:error.localizedDescription] details:nil]);
     } else {
-      _eventSink([FlutterError errorWithCode:@"VideoError" message:nil details:nil]);
+        _eventSink([FlutterError errorWithCode:@"VideoError" message:@"Failed to load video: Вероятно, соединение с интернетом прервано." details:nil]);
     }
 }
 
