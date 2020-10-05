@@ -83,6 +83,16 @@ public class Messages {
       this.formatHint = setterArg;
     }
 
+    private HashMap<String, String> headers;
+
+    public HashMap<String, String> getHeaders() {
+      return headers;
+    }
+
+    public void setHeaders(HashMap<String, String> setterArg) {
+      this.headers = setterArg;
+    }
+
     public int location;
 
     HashMap toMap() {
@@ -92,9 +102,11 @@ public class Messages {
       toMapResult.put("packageName", packageName);
       toMapResult.put("formatHint", formatHint);
       toMapResult.put("duration", location);
+      toMapResult.put("headers", headers);
       return toMapResult;
     }
 
+    @SuppressWarnings("unchecked")
     static CreateMessage fromMap(HashMap map) {
       CreateMessage fromMapResult = new CreateMessage();
       Object asset = map.get("asset");
@@ -107,6 +119,8 @@ public class Messages {
       fromMapResult.formatHint = (String) formatHint;
       Object location =  map.get("duration");
       fromMapResult.location = (int ) location;
+      Object headers = map.get("headers");
+      fromMapResult.headers = (HashMap) headers;
       return fromMapResult;
     }
   }
