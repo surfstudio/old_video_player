@@ -33,7 +33,7 @@ dependencies:
   video_player_web: #'>=0.1.4 <2.0.0'
     git:
       url: https://github.com/surfstudio/plugins.git
-      ref: surf-video-player
+      ref: LLC-803-video-player-headers
       path: packages/video_player/video_player_web
 
   flutter:
