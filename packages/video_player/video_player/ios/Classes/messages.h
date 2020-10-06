@@ -24,6 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, nullable) NSString *uri;
 @property(nonatomic, copy, nullable) NSString *packageName;
 @property(nonatomic, copy, nullable) NSString *formatHint;
+@property(nonatomic, copy, nullable) NSDictionary *headers;
 @end
 
 @interface FLTLoopingMessage : NSObject

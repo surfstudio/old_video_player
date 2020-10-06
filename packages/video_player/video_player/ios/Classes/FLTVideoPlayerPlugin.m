@@ -46,7 +46,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic, readonly) bool isPlaying;
 @property(nonatomic) bool isLooping;
 @property(nonatomic, readonly) bool isInitialized;
-- (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater;
+- (instancetype)initWithURL:(NSURL*)url headers:(NSDictionary*)headers frameUpdater:(FLTFrameUpdater*)frameUpdater;
 - (void)play;
 - (void)pause;
 - (void)setIsLooping:(bool)isLooping;
@@ -62,7 +62,7 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
 @implementation FLTVideoPlayer
 - (instancetype)initWithAsset:(NSString*)asset frameUpdater:(FLTFrameUpdater*)frameUpdater {
   NSString* path = [[NSBundle mainBundle] pathForResource:asset ofType:nil];
-  return [self initWithURL:[NSURL fileURLWithPath:path] frameUpdater:frameUpdater];
+    return [self initWithURL:[NSURL fileURLWithPath:path] headers:nil frameUpdater:frameUpdater];
 }
 
 - (void)addObservers:(AVPlayerItem*)item {
