@@ -25,6 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, nullable) NSString *packageName;
 @property(nonatomic, copy, nullable) NSString *formatHint;
 @property(nonatomic, copy, nullable) NSDictionary *headers;
+@property(nonatomic, copy, nullable) NSNumber *startTime;
 @end
 
 @interface FLTLoopingMessage : NSObject

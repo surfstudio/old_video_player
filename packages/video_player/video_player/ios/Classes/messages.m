@@ -88,6 +88,10 @@ static NSDictionary *wrapResult(NSDictionary *result, FlutterError *error) {
   if ((NSNull *)result.headers == [NSNull null]){
       result.headers = nil;
   }
+  result.startTime = dict[@"duration"];
+  if ((NSNull *)result.startTime == [NSNull null]) {
+    result.startTime = nil;
+  }
   return result;
 }
 - (NSDictionary *)toMap {

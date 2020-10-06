@@ -46,6 +46,8 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic, readonly) bool isPlaying;
 @property(nonatomic) bool isLooping;
 @property(nonatomic, readonly) bool isInitialized;
+@property(assign, nonatomic) int seekTime;
+@property(assign, nonatomic) int startTime;
 - (instancetype)initWithURL:(NSURL*)url headers:(NSDictionary*)headers frameUpdater:(FLTFrameUpdater*)frameUpdater;
 - (void)play;
 - (void)pause;
@@ -92,6 +94,10 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
                                            selector:@selector(itemDidPlayToEndTime:)
                                                name:AVPlayerItemDidPlayToEndTimeNotification
                                              object:item];
+
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(itemFailedToPlayToEndTime:) name:AVPlayerItemNewErrorLogEntryNotification object:item];
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(itemFailedToPlayToEndTime:) name:AVPlayerItemFailedToPlayToEndTimeNotification object:item];
+
 }
 
 - (void)itemDidPlayToEndTime:(NSNotification*)notification {
@@ -103,6 +109,19 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
       _eventSink(@{@"event" : @"completed"});
     }
   }
+}
+
+- (void)itemFailedToPlayToEndTime:(NSNotification *)notification {
+    if (!_eventSink)
+        return;
+
+    NSError *error = notification.userInfo[AVPlayerItemFailedToPlayToEndTimeErrorKey];
+
+    if ((notification.name == AVPlayerItemFailedToPlayToEndTimeNotification) && error) {
+      _eventSink([FlutterError errorWithCode:@"VideoError" message:[@"Failed to load video: " stringByAppendingString:error.localizedDescription] details:nil]);
+    } else {
+        _eventSink([FlutterError errorWithCode:@"VideoError" message:@"Failed to load video: Вероятно, соединение с интернетом прервано." details:nil]);
+    }
 }
 
 static inline CGFloat radiansToDegrees(CGFloat radians) {
@@ -229,6 +248,10 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   _player = [AVPlayer playerWithPlayerItem:item];
   _player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
 
+  self.seekTime = -1;
+
+  self.startTime = 600000;
+
   [self createVideoOutputAndDisplayLink:frameUpdater];
 
   [self addObservers:item];
@@ -270,6 +293,10 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
         [item addOutput:_videoOutput];
         [self sendInitialized];
         [self updatePlayingState];
+            if (self.startTime != -1) {
+                [self.player seekToTime:CMTimeMake(self.startTime, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+                self.startTime = -1;
+            }
         break;
     }
   } else if (context == playbackLikelyToKeepUpContext) {
@@ -338,6 +365,9 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (int64_t)position {
+  if (self.seekTime != -1)
+    return self.seekTime;
+
   return FLTCMTimeToMillis([_player currentTime]);
 }
 
@@ -346,9 +376,16 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (void)seekTo:(int)location {
-  [_player seekToTime:CMTimeMake(location, 1000)
-      toleranceBefore:kCMTimeZero
-       toleranceAfter:kCMTimeZero];
+  self.seekTime = location;
+  __weak typeof(self) weakSelf = self;
+  [_player seekToTime:CMTimeMake(location, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
+    if (!finished)
+      return;
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+      weakSelf.seekTime = -1;
+    });
+}];
 }
 
 - (void)setIsLooping:(bool)isLooping {
@@ -519,10 +556,14 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
       assetPath = [_registrar lookupKeyForAsset:input.asset];
     }
     player = [[FLTVideoPlayer alloc] initWithAsset:assetPath frameUpdater:frameUpdater];
+    if (input.startTime.intValue > 0)
+      player.startTime = input.startTime.intValue;
     return [self onPlayerSetup:player frameUpdater:frameUpdater];
   } else if (input.uri) {
     player = [[FLTVideoPlayer alloc] initWithURL:[NSURL URLWithString:input.uri]
                                     frameUpdater:frameUpdater];
+    if (input.startTime.intValue > 0)
+      player.startTime = input.startTime.intValue;
     return [self onPlayerSetup:player frameUpdater:frameUpdater];
   } else {
     *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];
