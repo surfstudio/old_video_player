@@ -181,9 +181,15 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   _displayLink.paused = YES;
 }
 
-- (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater {
-  AVPlayerItem* item = [AVPlayerItem playerItemWithURL:url];
-  return [self initWithPlayerItem:item frameUpdater:frameUpdater];
+- (instancetype)initWithURL:(NSURL*)url headers:(NSDictionary*)headers frameUpdater:(FLTFrameUpdater*)frameUpdater {
+    AVPlayerItem* item;
+    if (headers) {
+        AVURLAsset* asset = [AVURLAsset URLAssetWithURL:url options:@{@"AVURLAssetHTTPHeaderFieldsKey" : headers}];
+        item = [AVPlayerItem playerItemWithAsset:asset];
+    } else {
+        item = [AVPlayerItem playerItemWithURL:url];
+    }
+    return [self initWithPlayerItem:item frameUpdater:frameUpdater];
 }
 
 - (CGAffineTransform)fixTransform:(AVAssetTrack*)videoTrack {
@@ -560,7 +566,9 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
       player.startTime = input.startTime.intValue;
     return [self onPlayerSetup:player frameUpdater:frameUpdater];
   } else if (input.uri) {
+    NSDictionary* headers = input.headers;
     player = [[FLTVideoPlayer alloc] initWithURL:[NSURL URLWithString:input.uri]
+                                         headers:headers
                                     frameUpdater:frameUpdater];
     if (input.startTime.intValue > 0)
       player.startTime = input.startTime.intValue;
