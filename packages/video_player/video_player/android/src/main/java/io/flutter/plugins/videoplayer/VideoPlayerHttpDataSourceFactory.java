@@ -1,6 +1,6 @@
 package io.flutter.plugins.videoplayer;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.google.android.exoplayer2.upstream.HttpDataSource.BaseFactory;
