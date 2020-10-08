@@ -154,6 +154,7 @@ class DataSource {
     this.asset,
     this.package,
     this.duration,
+    this.headers,
   });
 
   /// The way in which the video was originally loaded.
@@ -181,6 +182,9 @@ class DataSource {
 
   /// Duration for initialization
   final Duration duration;
+
+  /// http request headers
+  final Map<String, String> headers;
 }
 
 /// The way in which the video was originally loaded.

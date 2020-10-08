@@ -84,6 +84,10 @@ static NSDictionary *wrapResult(NSDictionary *result, FlutterError *error) {
   if ((NSNull *)result.formatHint == [NSNull null]) {
     result.formatHint = nil;
   }
+  result.headers = dict[@"headers"];
+  if ((NSNull *)result.headers == [NSNull null]){
+      result.headers = nil;
+  }
   result.startTime = dict[@"duration"];
   if ((NSNull *)result.startTime == [NSNull null]) {
     result.startTime = nil;
@@ -97,7 +101,9 @@ static NSDictionary *wrapResult(NSDictionary *result, FlutterError *error) {
                                    (self.packageName ? self.packageName : [NSNull null]),
                                    @"packageName",
                                    (self.formatHint ? self.formatHint : [NSNull null]),
-                                   @"formatHint", nil];
+                                   @"formatHint",
+                                   (self.headers ? self.headers: [NSNull null]),
+                                   @"headers", nil];
 }
 @end
 
