@@ -37,6 +37,10 @@ public class VideoPlayerHttpDataSourceFactory extends BaseFactory {
     @Override
     protected DefaultHttpDataSource createDataSourceInternal(
             RequestProperties defaultRequestProperties) {
+        if(headers != null){
+            System.out.println("DEV_INFO_VIDEO Auth headers: " + headers);
+        }
+
         if (this.headers != null) {
             if (defaultRequestProperties == null) {
                 defaultRequestProperties = new RequestProperties();

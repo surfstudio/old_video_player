@@ -30,6 +30,7 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
+import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.view.TextureRegistry;
@@ -82,7 +83,7 @@ final class VideoPlayer {
       dataSourceFactory =
           new VideoPlayerHttpDataSourceFactory(
               "ExoPlayer",
-              null,
+              new TransferListenerImpl(),
               DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
               DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
               true,
@@ -174,6 +175,7 @@ final class VideoPlayer {
     exoPlayer.setVideoSurface(surface);
     setAudioAttributes(exoPlayer, options.mixWithOthers);
 
+    exoPlayer.addAnalyticsListener(new EventLogger(new DefaultTrackSelector()));
     exoPlayer.addListener(
         new EventListener() {
 
@@ -195,6 +197,8 @@ final class VideoPlayer {
 
           @Override
           public void onPlayerError(final ExoPlaybackException error) {
+            System.out.println("error");
+
             if (eventSink != null) {
               eventSink.error("VideoError", "Video player had error " + error, null);
             }
