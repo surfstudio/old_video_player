@@ -175,9 +175,13 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// The name of the asset is given by the [dataSource] argument and must not be
   /// null. The [package] argument must be non-null when the asset comes from a
   /// package and null otherwise.
-  VideoPlayerController.asset(this.dataSource,
-      {this.package, this.closedCaptionFile, this.videoPlayerOptions})
-      : dataSourceType = DataSourceType.asset,
+  VideoPlayerController.asset(
+    this.dataSource, {
+    this.package,
+    this.closedCaptionFile,
+    this.videoPlayerOptions,
+    this.enableLog = false,
+  })  : dataSourceType = DataSourceType.asset,
         formatHint = null,
         headers = null,
         super(VideoPlayerValue(duration: null));
@@ -195,6 +199,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     this.closedCaptionFile,
     this.videoPlayerOptions,
     this.headers,
+    this.enableLog = false,
   })  : dataSourceType = DataSourceType.network,
         package = null,
         super(VideoPlayerValue(duration: null));
@@ -204,7 +209,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// This will load the file from the file-URI given by:
   /// `'file://${file.path}'`.
   VideoPlayerController.file(File file,
-      {this.closedCaptionFile, this.videoPlayerOptions})
+      {this.closedCaptionFile, this.videoPlayerOptions, this.enableLog = false})
       : dataSource = 'file://${file.path}',
         dataSourceType = DataSourceType.file,
         package = null,
@@ -242,6 +247,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// [initialize()] is called.
   final Future<ClosedCaptionFile> closedCaptionFile;
 
+  /// Enable logging for analytics and network
+  final bool enableLog;
+
   ClosedCaptionFile _closedCaptionFile;
   Timer _timer;
   bool _isDisposed = false;
@@ -268,6 +276,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           asset: dataSource,
           package: package,
           duration: duration,
+          enableLog: enableLog,
         );
         break;
       case DataSourceType.network:
@@ -277,6 +286,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           formatHint: formatHint,
           duration: duration,
           headers: headers,
+          enableLog: enableLog,
         );
         break;
       case DataSourceType.file:
@@ -284,6 +294,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           sourceType: DataSourceType.file,
           uri: dataSource,
           duration: duration,
+          enableLog: enableLog,
         );
         break;
     }

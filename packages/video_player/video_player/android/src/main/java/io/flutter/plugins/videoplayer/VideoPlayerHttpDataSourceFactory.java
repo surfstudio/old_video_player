@@ -18,6 +18,7 @@ public class VideoPlayerHttpDataSourceFactory extends BaseFactory {
     private final int readTimeoutMillis;
     private final boolean allowCrossProtocolRedirects;
     private final Map<String, String> headers;
+    private final boolean enableLog;
 
     public VideoPlayerHttpDataSourceFactory(
             String userAgent,
@@ -25,18 +26,24 @@ public class VideoPlayerHttpDataSourceFactory extends BaseFactory {
             int connectTimeoutMillis,
             int readTimeoutMillis,
             boolean allowCrossProtocolRedirects,
-            Map<String, String> headers) {
+            Map<String, String> headers,
+            boolean enableLog) {
         this.userAgent = userAgent;
         this.listener = listener;
         this.connectTimeoutMillis = connectTimeoutMillis;
         this.readTimeoutMillis = readTimeoutMillis;
         this.allowCrossProtocolRedirects = allowCrossProtocolRedirects;
         this.headers = headers;
+        this.enableLog = enableLog;
     }
 
     @Override
     protected DefaultHttpDataSource createDataSourceInternal(
             RequestProperties defaultRequestProperties) {
+        if(headers != null && enableLog){
+            System.out.println("DEV_INFO_VIDEO Auth headers: " + headers);
+        }
+
         if (this.headers != null) {
             if (defaultRequestProperties == null) {
                 defaultRequestProperties = new RequestProperties();

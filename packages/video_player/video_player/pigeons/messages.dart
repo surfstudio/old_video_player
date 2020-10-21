@@ -29,6 +29,9 @@ class CreateMessage {
   String uri;
   String packageName;
   String formatHint;
+  int duration;
+  Map<String, String> headers;
+  bool enableLog;
 }
 
 class MixWithOthersMessage {

@@ -562,16 +562,16 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
       assetPath = [_registrar lookupKeyForAsset:input.asset];
     }
     player = [[FLTVideoPlayer alloc] initWithAsset:assetPath frameUpdater:frameUpdater];
-    if (input.startTime.intValue > 0)
-      player.startTime = input.startTime.intValue;
+    if (input.duration.intValue > 0)
+      player.startTime = input.duration.intValue;
     return [self onPlayerSetup:player frameUpdater:frameUpdater];
   } else if (input.uri) {
     NSDictionary* headers = input.headers;
     player = [[FLTVideoPlayer alloc] initWithURL:[NSURL URLWithString:input.uri]
                                          headers:headers
                                     frameUpdater:frameUpdater];
-    if (input.startTime.intValue > 0)
-      player.startTime = input.startTime.intValue;
+    if (input.duration.intValue > 0)
+      player.startTime = input.duration.intValue;
     return [self onPlayerSetup:player frameUpdater:frameUpdater];
   } else {
     *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];

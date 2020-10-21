@@ -9,6 +9,10 @@ import android.os.Build;
 import android.util.Log;
 import android.util.LongSparseArray;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 import io.flutter.embedding.engine.loader.FlutterLoader;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.BinaryMessenger;
@@ -139,8 +143,9 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi {
               "asset:///" + assetLookupKey,
               null,
               options,
-              arg.location,
-              null);
+              arg.getDuration(),
+              null,
+                  arg.getEnableLog());
       videoPlayers.put(handle.id(), player);
     } else {
       player =
@@ -151,8 +156,9 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi {
               arg.getUri(),
               arg.getFormatHint(),
               options,
-              arg.location,
-              arg.getHeaders());
+              arg.getDuration(),
+              mapHashMapToStringsMap(arg.getHeaders()),
+              arg.getEnableLog() );
       videoPlayers.put(handle.id(), player);
     }
 
@@ -245,5 +251,14 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi {
     void stopListening(BinaryMessenger messenger) {
       VideoPlayerApi.setup(messenger, null);
     }
+  }
+
+  private Map<String, String> mapHashMapToStringsMap(HashMap hashMap) {
+    if(hashMap == null) return null;
+    Map<String, String> map = new HashMap<>();
+    for (Object key : hashMap.keySet()) {
+      map.put((String) key, (String) Objects.requireNonNull(hashMap.get(key)));
+    }
+    return map;
   }
 }

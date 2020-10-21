@@ -155,6 +155,7 @@ class DataSource {
     this.package,
     this.duration,
     this.headers,
+    this.enableLog,
   });
 
   /// The way in which the video was originally loaded.
@@ -185,6 +186,9 @@ class DataSource {
 
   /// http request headers
   final Map<String, String> headers;
+
+  /// Enable log for analytics and network
+  final bool enableLog;
 }
 
 /// The way in which the video was originally loaded.
