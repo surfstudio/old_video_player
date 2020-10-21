@@ -1,12 +1,10 @@
 package io.flutter.plugins.videoplayer;
 
-import static com.google.android.exoplayer2.Player.REPEAT_MODE_ALL;
-import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
-
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.view.Surface;
+
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -29,16 +27,20 @@ import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
-import io.flutter.plugin.common.EventChannel;
-import io.flutter.view.TextureRegistry;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import io.flutter.plugin.common.EventChannel;
+import io.flutter.view.TextureRegistry;
+
+import static com.google.android.exoplayer2.Player.REPEAT_MODE_ALL;
+import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
 
 final class VideoPlayer {
   private static final String FORMAT_SS = "ss";
@@ -57,6 +59,7 @@ final class VideoPlayer {
   private final EventChannel eventChannel;
 
   private boolean isInitialized = false;
+  private boolean needLogging = false;
 
   private final VideoPlayerOptions options;
 
@@ -67,11 +70,17 @@ final class VideoPlayer {
       String dataSource,
       String formatHint,
       VideoPlayerOptions options,
-      int location,
-      Map<String, String> headers) {
+      long duration,
+      Map<String, String> headers,
+      Boolean enableLog
+      ) {
     this.eventChannel = eventChannel;
     this.textureEntry = textureEntry;
     this.options = options;
+    if(enableLog != null){
+      this.needLogging = enableLog;
+    }
+    System.out.println("qweqwe 1 " + enableLog);
 
     TrackSelector trackSelector = new DefaultTrackSelector();
     exoPlayer = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
@@ -83,7 +92,7 @@ final class VideoPlayer {
       dataSourceFactory =
           new VideoPlayerHttpDataSourceFactory(
               "ExoPlayer",
-              new TransferListenerImpl(),
+              this.needLogging ? new TransferListenerImpl() : null,
               DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
               DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
               true,
@@ -96,7 +105,7 @@ final class VideoPlayer {
     exoPlayer.prepare(mediaSource);
 
     setupVideoPlayer(eventChannel, textureEntry);
-    seekTo(location);
+    seekTo((int) duration);
   }
 
   private static boolean isHTTP(Uri uri) {
@@ -175,7 +184,8 @@ final class VideoPlayer {
     exoPlayer.setVideoSurface(surface);
     setAudioAttributes(exoPlayer, options.mixWithOthers);
 
-    exoPlayer.addAnalyticsListener(new EventLogger(new DefaultTrackSelector()));
+    if (needLogging) exoPlayer.addAnalyticsListener(new EventLogger(new DefaultTrackSelector()));
+
     exoPlayer.addListener(
         new EventListener() {
 
