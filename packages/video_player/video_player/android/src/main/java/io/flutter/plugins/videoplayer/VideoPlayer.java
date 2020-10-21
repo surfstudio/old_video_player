@@ -80,8 +80,6 @@ final class VideoPlayer {
     if(enableLog != null){
       this.needLogging = enableLog;
     }
-    System.out.println("qweqwe 1 " + enableLog);
-
     TrackSelector trackSelector = new DefaultTrackSelector();
     exoPlayer = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
 
@@ -96,7 +94,8 @@ final class VideoPlayer {
               DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
               DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
               true,
-              headers);
+              headers,
+              enableLog);
     } else {
       dataSourceFactory = new DefaultDataSourceFactory(context, "ExoPlayer");
     }
@@ -207,8 +206,6 @@ final class VideoPlayer {
 
           @Override
           public void onPlayerError(final ExoPlaybackException error) {
-            System.out.println("error");
-
             if (eventSink != null) {
               eventSink.error("VideoError", "Video player had error " + error, null);
             }
