@@ -112,16 +112,45 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
 }
 
 - (void)itemFailedToPlayToEndTime:(NSNotification *)notification {
-    if (!_eventSink)
-        return;
+  if (!_eventSink)
+    return;
 
+  if (notification.name == AVPlayerItemFailedToPlayToEndTimeNotification) {
     NSError *error = notification.userInfo[AVPlayerItemFailedToPlayToEndTimeErrorKey];
+    _eventSink([FlutterError errorWithCode:@"VideoError" message:[@"Failed to load video: " stringByAppendingString:error.localizedDescription] details:[self createErrorInfoFromError:error]]);
+  } else {
+    AVPlayerItemErrorLog *log = self.player.currentItem.errorLog;
 
-    if ((notification.name == AVPlayerItemFailedToPlayToEndTimeNotification) && error) {
-      _eventSink([FlutterError errorWithCode:@"VideoError" message:[@"Failed to load video: " stringByAppendingString:error.localizedDescription] details:nil]);
+    if ([log.events count]) {
+      AVPlayerItemErrorLogEvent *e = log.events.lastObject;
+      _eventSink([FlutterError errorWithCode:@"VideoError" message:[NSString stringWithFormat: @"Failed to load video: %@", e.errorComment] details:[self createErrorInfoFromLogEvent:e]]);
     } else {
-        _eventSink([FlutterError errorWithCode:@"VideoError" message:@"Failed to load video: Вероятно, соединение с интернетом прервано." details:nil]);
+      _eventSink([FlutterError errorWithCode:@"VideoError" message:@"Failed to load video: Вероятно, соединение с интернетом прервано." details:nil]);
     }
+  }
+}
+
+- (NSDictionary *)createErrorInfoFromError: (NSError *)error {
+  if (!error)
+    return nil;
+
+  NSMutableDictionary *info = [NSMutableDictionary new];
+    if (error.domain.UTF8String)
+      [info setObject:[NSString stringWithUTF8String:error.domain.UTF8String] forKey:@"domain"];
+  [info setObject:[NSNumber numberWithLong:error.code] forKey:@"code"];
+
+  return info;
+}
+
+- (NSDictionary *)createErrorInfoFromLogEvent: (AVPlayerItemErrorLogEvent *)event {
+  if (!event)
+    return nil;
+
+  NSMutableDictionary *info = [NSMutableDictionary new];
+  [info setObject:event.errorDomain forKey:@"domain"];
+  [info setObject:[NSNumber numberWithLong:event.errorStatusCode] forKey:@"code"];
+
+   return info;
 }
 
 static inline CGFloat radiansToDegrees(CGFloat radians) {
@@ -256,7 +285,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
   self.seekTime = -1;
 
-  self.startTime = 600000;
+  self.startTime = 0;
 
   [self createVideoOutputAndDisplayLink:frameUpdater];
 
