@@ -48,6 +48,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic, readonly) bool isInitialized;
 @property(assign, nonatomic) int seekTime;
 @property(assign, nonatomic) int startTime;
+@property(assign, nonatomic) BOOL isLoggingEnabled;
 - (instancetype)initWithURL:(NSURL*)url headers:(NSDictionary*)headers frameUpdater:(FLTFrameUpdater*)frameUpdater;
 - (void)play;
 - (void)pause;
@@ -101,6 +102,7 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
 }
 
 - (void)itemDidPlayToEndTime:(NSNotification*)notification {
+  NSLog(@"Player did play to end time");
   if (_isLooping) {
     AVPlayerItem* p = [notification object];
     [p seekToTime:kCMTimeZero completionHandler:nil];
@@ -117,14 +119,17 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
 
   if (notification.name == AVPlayerItemFailedToPlayToEndTimeNotification) {
     NSError *error = notification.userInfo[AVPlayerItemFailedToPlayToEndTimeErrorKey];
+    NSLog(@"Player error occured: %@, %@", error.localizedDescription, [NSString stringWithUTF8String:error.domain.UTF8String]);
     _eventSink([FlutterError errorWithCode:@"VideoError" message:[@"Failed to load video: " stringByAppendingString:error.localizedDescription] details:[self createErrorInfoFromError:error]]);
   } else {
     AVPlayerItemErrorLog *log = self.player.currentItem.errorLog;
 
     if ([log.events count]) {
       AVPlayerItemErrorLogEvent *e = log.events.lastObject;
+      NSLog(@"Player error occured: %@", e.errorComment);
       _eventSink([FlutterError errorWithCode:@"VideoError" message:[NSString stringWithFormat: @"Failed to load video: %@", e.errorComment] details:[self createErrorInfoFromLogEvent:e]]);
     } else {
+      NSLog(@"Unknown player error occured");
       _eventSink([FlutterError errorWithCode:@"VideoError" message:@"Failed to load video: Вероятно, соединение с интернетом прервано." details:nil]);
     }
   }
@@ -218,6 +223,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     } else {
         item = [AVPlayerItem playerItemWithURL:url];
     }
+    NSLog(@"Player created (url: '%@', headers: '%@')", url.absoluteString, headers);
     return [self initWithPlayerItem:item frameUpdater:frameUpdater];
 }
 
@@ -314,6 +320,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     AVPlayerItem* item = (AVPlayerItem*)object;
     switch (item.status) {
       case AVPlayerItemStatusFailed:
+        NSLog(@"Player status: FAILED (%@)", item.error.localizedDescription);
         if (_eventSink != nil) {
           _eventSink([FlutterError
               errorWithCode:@"VideoError"
@@ -323,8 +330,10 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
         }
         break;
       case AVPlayerItemStatusUnknown:
+        NSLog(@"Player status: unknown");
         break;
       case AVPlayerItemStatusReadyToPlay:
+        NSLog(@"Player status: ready to play");
         [item addOutput:_videoOutput];
         [self sendInitialized];
         [self updatePlayingState];
@@ -336,16 +345,19 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     }
   } else if (context == playbackLikelyToKeepUpContext) {
     if ([[_player currentItem] isPlaybackLikelyToKeepUp]) {
+      NSLog(@"Player buffering completed");
       [self updatePlayingState];
       if (_eventSink != nil) {
         _eventSink(@{@"event" : @"bufferingEnd"});
       }
     }
   } else if (context == playbackBufferEmptyContext) {
+    NSLog(@"Player buffering started");
     if (_eventSink != nil) {
       _eventSink(@{@"event" : @"bufferingStart"});
     }
   } else if (context == playbackBufferFullContext) {
+    NSLog(@"Player buffering completed");
     if (_eventSink != nil) {
       _eventSink(@{@"event" : @"bufferingEnd"});
     }
@@ -390,11 +402,13 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (void)play {
+  NSLog(@"Player play");
   _isPlaying = true;
   [self updatePlayingState];
 }
 
 - (void)pause {
+  NSLog(@"Player pause");
   _isPlaying = false;
   [self updatePlayingState];
 }
@@ -411,6 +425,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (void)seekTo:(int)location {
+  NSLog(@"Player seek to %d", location);
   self.seekTime = location;
   __weak typeof(self) weakSelf = self;
   [_player seekToTime:CMTimeMake(location, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero completionHandler:^(BOOL finished) {
@@ -424,16 +439,19 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (void)setIsLooping:(bool)isLooping {
+  NSLog(@"Player set looping %d", isLooping);
   _isLooping = isLooping;
 }
 
 - (void)setVolume:(double)volume {
+  NSLog(@"Player set volume: %lf", volume);
   _player.volume = (float)((volume < 0.0) ? 0.0 : ((volume > 1.0) ? 1.0 : volume));
 }
 
 - (void)setPlaybackSpeed:(double)speed {
   // See https://developer.apple.com/library/archive/qa/qa1772/_index.html for an explanation of
   // these checks.
+  NSLog(@"Player set speed: %lf", speed);
   if (speed > 2.0 && !_player.currentItem.canPlayFastForward) {
     if (_eventSink != nil) {
       _eventSink([FlutterError errorWithCode:@"VideoError"
@@ -593,6 +611,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     player = [[FLTVideoPlayer alloc] initWithAsset:assetPath frameUpdater:frameUpdater];
     if (input.duration.intValue > 0)
       player.startTime = input.duration.intValue;
+    player.isLoggingEnabled = input.enableLog.boolValue;
     return [self onPlayerSetup:player frameUpdater:frameUpdater];
   } else if (input.uri) {
     NSDictionary* headers = input.headers;
@@ -601,6 +620,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
                                     frameUpdater:frameUpdater];
     if (input.duration.intValue > 0)
       player.startTime = input.duration.intValue;
+    player.isLoggingEnabled = input.enableLog.boolValue;
     return [self onPlayerSetup:player frameUpdater:frameUpdater];
   } else {
     *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];
