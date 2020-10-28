@@ -18,6 +18,10 @@ export 'package:video_player_platform_interface/video_player_platform_interface.
 
 export 'src/closed_caption_file.dart';
 
+const _nonFatalExceptions = [
+  'Failed to load video: Segment exceeds specified bandwidth for variant',
+];
+
 final VideoPlayerPlatform _videoPlayerPlatform = VideoPlayerPlatform.instance
 // This will clear all open videos on the platform when a full restart is
 // performed.
@@ -351,6 +355,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
     void errorListener(Object obj) {
       final PlatformException e = obj;
+      if (_nonFatalExceptions.contains(e.message)) return;
+
       value = VideoPlayerValue.erroneous(e.message);
       _timer?.cancel();
       if (!initializingCompleter.isCompleted) {
