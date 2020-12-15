@@ -3,6 +3,16 @@
 // found in the LICENSE file.
 
 #import <Flutter/Flutter.h>
+#import <AVFoundation/AVFoundation.h>
 
 @interface FLTVideoPlayerPlugin : NSObject <FlutterPlugin>
+@property(readonly, strong, nonatomic) NSMutableDictionary* players;
+@end
+
+@interface FLTVideoPlayer : NSObject <FlutterTexture, FlutterStreamHandler>
+@property(readonly, nonatomic) AVPlayer* player;
+@property(nonatomic) bool isPipActive;
+- (void)play;
+- (void)pause;
+- (void)setIsPipActive:(bool)isPipActive;
 @end
