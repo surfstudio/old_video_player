@@ -263,7 +263,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   /// This is just exposed for testing. It shouldn't be used by anyone depending
   /// on the plugin.
-  @visibleForTesting
   int get textureId => _textureId;
 
   /// Attempts to open the given [dataSource] and load metadata about the video.
