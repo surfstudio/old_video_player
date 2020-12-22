@@ -585,11 +585,12 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
         _wasPlayingBeforePause = _controller.value.isPlaying;
         _controller.pause();
         break;
-      case AppLifecycleState.resumed:
-        if (_wasPlayingBeforePause) {
-          _controller.play();
-        }
-        break;
+    // чтобы видео оставалось на паузе после отправки приложения в background
+    // case AppLifecycleState.resumed:
+    //   if (_wasPlayingBeforePause) {
+    //     _controller.play();
+    //   }
+    //   break;
       default:
     }
   }

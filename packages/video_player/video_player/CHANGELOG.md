@@ -1,3 +1,20 @@
+
+## Поправи didChangeAppLifecycleState  в video_player.dart
+
+* цель - чтобы после background видео оставалось на паузе
+
+## Добавлены методы и свойства
+
+* FLTVideoPlayer.isPipActive - так как fltPlayer не дает запустить отдельно player, на время pip снимаю это ограничение
+* FLTVideoPlayer.setIsPipActive
+
+## Убрана приватность на IOS
+
+* FLTVideoPlayerPlugin.players
+* FLTVideoPlayer.player
+* FLTVideoPlayer.play
+* FLTVideoPlayer.pause
+
 ## 0.11.1+2
 
 * Update android compileSdkVersion to 29.
