@@ -29,7 +29,7 @@ dependencies:
   video_player_platform_interface: #^4.1.0
     git:
       url: https://github.com/surfstudio/plugins.git
-      ref: surf-video-player
+      ref: no-upgrade-flutter-packages
       path: packages/video_player/video_player_platform_interface
   # The design on https://flutter.dev/go/federated-plugins was to leave
   # this constraint as "any". We cannot do it right now as it fails pub publish
@@ -40,7 +40,7 @@ dependencies:
   video_player_web: #^2.0.0
     git:
       url: https://github.com/surfstudio/plugins.git
-      ref: surf-video-player
+      ref: no-upgrade-flutter-packages
       path: packages/video_player/video_player_web
 
 dev_dependencies:
