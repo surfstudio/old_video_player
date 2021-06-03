@@ -1,4 +1,4 @@
-// Copyright 2020 The Chromium Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -33,11 +33,11 @@ public class WifiInfoFlutterPlugin implements FlutterPlugin {
   }
 
   private void setupChannels(BinaryMessenger messenger, Context context) {
-    methodChannel = new MethodChannel(messenger, "plugins.flutter.io/wifi_flutter_info");
+    methodChannel = new MethodChannel(messenger, "plugins.flutter.io/wifi_info_flutter");
     final WifiManager wifiManager =
         (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
-    final WifiInfoFlutter wifiInfoFlutter = new WifiInfoFlutter(wifiManager);
+    final WifiInfoFlutter wifiInfoFlutter = new WifiInfoFlutter(wifiManager, context);
 
     final WifiInfoFlutterMethodChannelHandler methodChannelHandler =
         new WifiInfoFlutterMethodChannelHandler(wifiInfoFlutter);
