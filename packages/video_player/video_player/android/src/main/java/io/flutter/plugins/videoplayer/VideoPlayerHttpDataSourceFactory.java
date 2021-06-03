@@ -37,6 +37,7 @@ public class VideoPlayerHttpDataSourceFactory extends BaseFactory {
         this.enableLog = enableLog;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected DefaultHttpDataSource createDataSourceInternal(
             RequestProperties defaultRequestProperties) {

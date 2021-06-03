@@ -51,9 +51,15 @@ public class Messages {
     public String getFormatHint() { return formatHint; }
     public void setFormatHint(String setterArg) { this.formatHint = setterArg; }
 
-    private Map<Object, Object> httpHeaders;
-    public Map<Object, Object> getHttpHeaders() { return httpHeaders; }
-    public void setHttpHeaders(Map<Object, Object> setterArg) { this.httpHeaders = setterArg; }
+    private HashMap httpHeaders;
+
+    public HashMap getHttpHeaders() {
+          return httpHeaders;
+      }
+
+    public void setHttpHeaders(HashMap setterArg) {
+          this.httpHeaders = setterArg;
+      }
 
     private Long duration;
     public Long getDuration() { return duration; }
@@ -63,8 +69,8 @@ public class Messages {
     public Boolean getEnableLog() { return enableLog; }
     public void setEnableLog(Boolean setterArg) { this.enableLog = setterArg; }
 
-    Map<String, Object> toMap() {
-      Map<String, Object> toMapResult = new HashMap<>();
+    HashMap toMap() {
+      HashMap toMapResult = new HashMap<>();
       toMapResult.put("asset", asset);
       toMapResult.put("uri", uri);
       toMapResult.put("packageName", packageName);
@@ -74,7 +80,7 @@ public class Messages {
       toMapResult.put("enableLog", enableLog);
       return toMapResult;
     }
-    static CreateMessage fromMap(Map<String, Object> map) {
+    static CreateMessage fromMap(HashMap map) {
       CreateMessage fromMapResult = new CreateMessage();
       Object asset = map.get("asset");
       fromMapResult.asset = (String)asset;
@@ -85,7 +91,7 @@ public class Messages {
       Object formatHint = map.get("formatHint");
       fromMapResult.formatHint = (String)formatHint;
       Object httpHeaders = map.get("httpHeaders");
-      fromMapResult.httpHeaders = (Map<Object, Object>)httpHeaders;
+      fromMapResult.httpHeaders = (HashMap)httpHeaders;
       Object duration = map.get("duration");
       fromMapResult.duration = (duration == null) ? null : ((duration instanceof Integer) ? (Integer)duration : (Long)duration);
       Object enableLog = map.get("enableLog");
@@ -260,7 +266,7 @@ public class Messages {
             Map<String, Object> wrapped = new HashMap<>();
             try {
               @SuppressWarnings("ConstantConditions")
-              CreateMessage input = CreateMessage.fromMap((Map<String, Object>)message);
+              CreateMessage input = CreateMessage.fromMap((HashMap) message);
               TextureMessage output = api.create(input);
               wrapped.put("result", output.toMap());
             }

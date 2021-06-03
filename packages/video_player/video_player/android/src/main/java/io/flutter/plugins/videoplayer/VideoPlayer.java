@@ -24,6 +24,7 @@ import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
@@ -87,27 +88,15 @@ final class VideoPlayer {
 
     DataSource.Factory dataSourceFactory;
     if (isHTTP(uri)) {
-//      dataSourceFactory =
-//              new VideoPlayerHttpDataSourceFactory(
-//                      "ExoPlayer",
-//                      this.needLogging ? new TransferListenerImpl() : null,
-//                      DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
-//                      DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
-//                      true,
-//                      headers,
-//                      enableLog);
-      DefaultHttpDataSourceFactory httpDataSourceFactory =
-          new DefaultHttpDataSourceFactory(
-              "ExoPlayer",
-              this.needLogging ? new TransferListenerImpl() : null,
-              DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
-              DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
-              true,
-                  enableLog);
-      if (httpHeaders != null && !httpHeaders.isEmpty()) {
-        httpDataSourceFactory.getDefaultRequestProperties().set(httpHeaders);
-      }
-      dataSourceFactory = httpDataSourceFactory;
+      dataSourceFactory =
+              new VideoPlayerHttpDataSourceFactory(
+                      "ExoPlayer",
+                      this.needLogging ? new TransferListenerImpl() : null,
+                      DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
+                      DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
+                      true,
+                      httpHeaders,
+                      enableLog);
     } else {
       dataSourceFactory = new DefaultDataSourceFactory(context, "ExoPlayer");
     }
@@ -176,6 +165,7 @@ final class VideoPlayer {
     }
   }
 
+  @SuppressWarnings("deprecation")
   private void setupVideoPlayer(
       EventChannel eventChannel, TextureRegistry.SurfaceTextureEntry textureEntry) {
 
