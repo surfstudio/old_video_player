@@ -45,8 +45,7 @@ abstract class VideoPlayerPlatform {
       try {
         instance._verifyProvidesDefaultImplementations();
       } on NoSuchMethodError catch (_) {
-        throw AssertionError(
-            'Platform interfaces must not be implemented with `implements`');
+        throw AssertionError('Platform interfaces must not be implemented with `implements`');
       }
     }
     _instance = instance;
@@ -187,10 +186,10 @@ class DataSource {
   final String? package;
 
   /// Duration for initialization
-  final Duration duration;
+  final Duration? duration;
 
   /// Enable log for analytics and network
-  final bool enableLog;
+  final bool? enableLog;
 }
 
 /// The way in which the video was originally loaded.
@@ -268,11 +267,7 @@ class VideoEvent {
   }
 
   @override
-  int get hashCode =>
-      eventType.hashCode ^
-      duration.hashCode ^
-      size.hashCode ^
-      buffered.hashCode;
+  int get hashCode => eventType.hashCode ^ duration.hashCode ^ size.hashCode ^ buffered.hashCode;
 }
 
 /// Type of the event.
@@ -349,10 +344,10 @@ class DurationRange {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is DurationRange &&
-              runtimeType == other.runtimeType &&
-              start == other.start &&
-              end == other.end;
+      other is DurationRange &&
+          runtimeType == other.runtimeType &&
+          start == other.start &&
+          end == other.end;
 
   @override
   int get hashCode => start.hashCode ^ end.hashCode;
