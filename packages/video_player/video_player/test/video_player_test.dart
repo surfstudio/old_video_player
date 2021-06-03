@@ -15,8 +15,7 @@ import 'package:video_player_platform_interface/messages.dart';
 import 'package:video_player_platform_interface/test.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
-class FakeController extends ValueNotifier<VideoPlayerValue>
-    implements VideoPlayerController {
+class FakeController extends ValueNotifier<VideoPlayerValue> implements VideoPlayerController {
   FakeController() : super(VideoPlayerValue(duration: Duration.zero));
 
   @override
@@ -67,17 +66,16 @@ class FakeController extends ValueNotifier<VideoPlayerValue>
   VideoFormat? get formatHint => null;
 
   @override
-  Map<String, String> get headers => null;
-
-  @override
   Future<ClosedCaptionFile> get closedCaptionFile => _loadClosedCaption();
 
   @override
   VideoPlayerOptions? get videoPlayerOptions => null;
+
+  @override
+  bool get enableLog => false;
 }
 
-Future<ClosedCaptionFile> _loadClosedCaption() async =>
-    _FakeClosedCaptionFile();
+Future<ClosedCaptionFile> _loadClosedCaption() async => _FakeClosedCaptionFile();
 
 class _FakeClosedCaptionFile extends ClosedCaptionFile {
   @override
@@ -165,8 +163,7 @@ void main() {
       expect(find.byType(Text), findsNothing);
     });
 
-    testWidgets('Passes text contrast ratio guidelines',
-        (WidgetTester tester) async {
+    testWidgets('Passes text contrast ratio guidelines', (WidgetTester tester) async {
       final String text = 'foo';
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -194,10 +191,8 @@ void main() {
         );
         await controller.initialize();
 
-        expect(
-            fakeVideoPlayerPlatform.dataSourceDescriptions[0].asset, 'a.avi');
-        expect(fakeVideoPlayerPlatform.dataSourceDescriptions[0].packageName,
-            null);
+        expect(fakeVideoPlayerPlatform.dataSourceDescriptions[0].asset, 'a.avi');
+        expect(fakeVideoPlayerPlatform.dataSourceDescriptions[0].packageName, null);
       });
 
       test('network', () async {
@@ -278,12 +273,10 @@ void main() {
       });
 
       test('file', () async {
-        final VideoPlayerController controller =
-            VideoPlayerController.file(File('a.avi'));
+        final VideoPlayerController controller = VideoPlayerController.file(File('a.avi'));
         await controller.initialize();
 
-        expect(fakeVideoPlayerPlatform.dataSourceDescriptions[0].uri,
-            'file://a.avi');
+        expect(fakeVideoPlayerPlatform.dataSourceDescriptions[0].uri, 'file://a.avi');
       });
     });
 
@@ -291,8 +284,7 @@ void main() {
       final VideoPlayerController controller = VideoPlayerController.network(
         'https://127.0.0.1',
       );
-      expect(
-          controller.textureId, VideoPlayerController.kUninitializedTextureId);
+      expect(controller.textureId, VideoPlayerController.kUninitializedTextureId);
       expect(await controller.position, const Duration(seconds: 0));
       await controller.initialize();
 
@@ -314,10 +306,7 @@ void main() {
 
       // The two last calls will be "play" and then "setPlaybackSpeed". The
       // reason for this is that "play" calls "setPlaybackSpeed" internally.
-      expect(
-          fakeVideoPlayerPlatform
-              .calls[fakeVideoPlayerPlatform.calls.length - 2],
-          'play');
+      expect(fakeVideoPlayerPlatform.calls[fakeVideoPlayerPlatform.calls.length - 2], 'play');
       expect(fakeVideoPlayerPlatform.calls.last, 'setPlaybackSpeed');
     });
 
@@ -468,8 +457,7 @@ void main() {
         final FakeVideoEventStream fakeVideoEventStream =
             fakeVideoPlayerPlatform.streams[controller.textureId]!;
 
-        fakeVideoEventStream.eventsChannel
-            .sendEvent(<String, dynamic>{'event': 'completed'});
+        fakeVideoEventStream.eventsChannel.sendEvent(<String, dynamic>{'event': 'completed'});
         await tester.pumpAndSettle();
 
         expect(controller.value.isPlaying, isFalse);
@@ -486,8 +474,7 @@ void main() {
         final FakeVideoEventStream fakeVideoEventStream =
             fakeVideoPlayerPlatform.streams[controller.textureId]!;
 
-        fakeVideoEventStream.eventsChannel
-            .sendEvent(<String, dynamic>{'event': 'bufferingStart'});
+        fakeVideoEventStream.eventsChannel.sendEvent(<String, dynamic>{'event': 'bufferingStart'});
         await tester.pumpAndSettle();
         expect(controller.value.isBuffering, isTrue);
 
@@ -505,8 +492,7 @@ void main() {
         expect(controller.value.buffered[0].toString(),
             DurationRange(bufferStart, bufferEnd).toString());
 
-        fakeVideoEventStream.eventsChannel
-            .sendEvent(<String, dynamic>{'event': 'bufferingEnd'});
+        fakeVideoEventStream.eventsChannel.sendEvent(<String, dynamic>{'event': 'bufferingEnd'});
         await tester.pumpAndSettle();
         expect(controller.value.isBuffering, isFalse);
       });
@@ -581,8 +567,8 @@ void main() {
       const Duration duration = Duration(seconds: 5);
       const Size size = Size(400, 300);
       const Duration position = Duration(seconds: 1);
-      const Caption caption = Caption(
-          text: 'foo', number: 0, start: Duration.zero, end: Duration.zero);
+      const Caption caption =
+          Caption(text: 'foo', number: 0, start: Duration.zero, end: Duration.zero);
       final List<DurationRange> buffered = <DurationRange>[
         DurationRange(const Duration(seconds: 0), const Duration(seconds: 4))
       ];
@@ -683,9 +669,7 @@ void main() {
     const Color backgroundColor = Color.fromRGBO(255, 255, 0, 0.25);
 
     final VideoProgressColors colors = VideoProgressColors(
-        playedColor: playedColor,
-        bufferedColor: bufferedColor,
-        backgroundColor: backgroundColor);
+        playedColor: playedColor, bufferedColor: bufferedColor, backgroundColor: backgroundColor);
 
     expect(colors.playedColor, playedColor);
     expect(colors.bufferedColor, bufferedColor);
@@ -693,8 +677,7 @@ void main() {
   });
 
   test('setMixWithOthers', () async {
-    final VideoPlayerController controller = VideoPlayerController.file(
-        File(''),
+    final VideoPlayerController controller = VideoPlayerController.file(File(''),
         videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true));
     await controller.initialize();
     expect(controller.videoPlayerOptions!.mixWithOthers, true);
@@ -717,8 +700,8 @@ class FakeVideoPlayerPlatform extends TestHostVideoPlayerApi {
   @override
   TextureMessage create(CreateMessage arg) {
     calls.add('create');
-    streams[nextTextureId] = FakeVideoEventStream(
-        nextTextureId, 100, 100, const Duration(seconds: 1), forceInitError);
+    streams[nextTextureId] =
+        FakeVideoEventStream(nextTextureId, 100, 100, const Duration(seconds: 1), forceInitError);
     TextureMessage result = TextureMessage();
     result.textureId = nextTextureId++;
     dataSourceDescriptions.add(arg);
@@ -749,8 +732,7 @@ class FakeVideoPlayerPlatform extends TestHostVideoPlayerApi {
   @override
   PositionMessage position(TextureMessage arg) {
     calls.add('position');
-    final Duration position =
-        _positions[arg.textureId] ?? const Duration(seconds: 0);
+    final Duration position = _positions[arg.textureId] ?? const Duration(seconds: 0);
     return PositionMessage()..position = position.inMilliseconds;
   }
 
@@ -782,10 +764,8 @@ class FakeVideoPlayerPlatform extends TestHostVideoPlayerApi {
 }
 
 class FakeVideoEventStream {
-  FakeVideoEventStream(this.textureId, this.width, this.height, this.duration,
-      this.initWithError) {
-    eventsChannel = FakeEventsChannel(
-        'flutter.io/videoPlayer/videoEvents$textureId', onListen);
+  FakeVideoEventStream(this.textureId, this.width, this.height, this.duration, this.initWithError) {
+    eventsChannel = FakeEventsChannel('flutter.io/videoPlayer/videoEvents$textureId', onListen);
   }
 
   int textureId;
@@ -840,7 +820,7 @@ class FakeEventsChannel {
   }
 
   void _sendMessage(ByteData data) {
-    ServicesBinding.instance!.defaultBinaryMessenger.handlePlatformMessage(
-        eventsMethodChannel.name, data, (ByteData? data) {});
+    ServicesBinding.instance!.defaultBinaryMessenger
+        .handlePlatformMessage(eventsMethodChannel.name, data, (ByteData? data) {});
   }
 }
