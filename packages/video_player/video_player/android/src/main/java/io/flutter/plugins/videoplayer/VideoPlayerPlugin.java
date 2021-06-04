@@ -257,7 +257,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi {
   }
 
   private Map<String, String> mapHashMapToStringsMap(HashMap hashMap) {
-    if(hashMap == null) return null;
+    if (hashMap == null) return null;
     Map<String, String> map = new HashMap<>();
     for (Object key : hashMap.keySet()) {
       map.put((String) key, (String) Objects.requireNonNull(hashMap.get(key)));
