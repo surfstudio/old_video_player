@@ -78,7 +78,7 @@ final class VideoPlayer {
     this.textureEntry = textureEntry;
     this.options = options;
 
-    if(enableLog != null){
+    if (enableLog != null) {
       this.needLogging = enableLog;
     }
 
@@ -89,14 +89,14 @@ final class VideoPlayer {
     DataSource.Factory dataSourceFactory;
     if (isHTTP(uri)) {
       dataSourceFactory =
-              new VideoPlayerHttpDataSourceFactory(
-                      "ExoPlayer",
-                      this.needLogging ? new TransferListenerImpl() : null,
-                      DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
-                      DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
-                      true,
-                      httpHeaders,
-                      enableLog);
+          new VideoPlayerHttpDataSourceFactory(
+              "ExoPlayer",
+              this.needLogging ? new TransferListenerImpl() : null,
+              DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
+              DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
+              true,
+              httpHeaders,
+              enableLog);
     } else {
       dataSourceFactory = new DefaultDataSourceFactory(context, "ExoPlayer");
     }
