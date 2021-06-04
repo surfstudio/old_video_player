@@ -54,9 +54,9 @@ class VideoPlayerValue {
   /// Returns an instance with the given [errorDescription].
   VideoPlayerValue.erroneous(String errorDescription)
       : this(
-      duration: Duration.zero,
-      isInitialized: false,
-      errorDescription: errorDescription);
+            duration: Duration.zero,
+            isInitialized: false,
+            errorDescription: errorDescription);
 
   /// The total duration of the video.
   ///
@@ -188,13 +188,13 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// The name of the asset is given by the [dataSource] argument and must not be
   /// null. The [package] argument must be non-null when the asset comes from a
   /// package and null otherwise.
-  VideoPlayerController.asset(this.dataSource, {
+  VideoPlayerController.asset(
+    this.dataSource, {
     this.package,
     this.closedCaptionFile,
     this.videoPlayerOptions,
     this.enableLog = false,
-  })
-      : dataSourceType = DataSourceType.asset,
+  })  : dataSourceType = DataSourceType.asset,
         formatHint = null,
         httpHeaders = const {},
         super(VideoPlayerValue(duration: Duration.zero));
@@ -208,14 +208,14 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// the video format detection code.
   /// [httpHeaders] option allows to specify HTTP headers
   /// for the request to the [dataSource].
-  VideoPlayerController.network(this.dataSource, {
+  VideoPlayerController.network(
+    this.dataSource, {
     this.formatHint,
     this.closedCaptionFile,
     this.videoPlayerOptions,
     this.httpHeaders = const {},
     this.enableLog = false,
-  })
-      : dataSourceType = DataSourceType.network,
+  })  : dataSourceType = DataSourceType.network,
         package = null,
         super(VideoPlayerValue(duration: Duration.zero));
 
@@ -232,8 +232,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         httpHeaders = const {},
         super(VideoPlayerValue(duration: Duration.zero));
 
-  int _textureId;
-
   /// The URI to the video file. This will be in different formats depending on
   /// the [DataSourceType] of the original video.
   final String dataSource;
@@ -246,9 +244,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// **Android only**. Will override the platform's generic file format
   /// detection with whatever is set here.
   final VideoFormat? formatHint;
-
-  /// http request headers
-  final Map<String, String> headers;
 
   /// Describes the type of data source this [VideoPlayerController]
   /// is constructed with.
@@ -449,7 +444,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       _timer?.cancel();
       _timer = Timer.periodic(
         const Duration(milliseconds: 500),
-            (Timer timer) async {
+        (Timer timer) async {
           if (_isDisposed) {
             return;
           }
@@ -608,12 +603,12 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
         _wasPlayingBeforePause = _controller.value.isPlaying;
         _controller.pause();
         break;
-    // чтобы видео оставалось на паузе после отправки приложения в background
-    // case AppLifecycleState.resumed:
-    //   if (_wasPlayingBeforePause) {
-    //     _controller.play();
-    //   }
-    //   break;
+      // чтобы видео оставалось на паузе после отправки приложения в background
+      // case AppLifecycleState.resumed:
+      //   if (_wasPlayingBeforePause) {
+      //     _controller.play();
+      //   }
+      //   break;
       default:
     }
   }
@@ -798,7 +793,8 @@ class VideoProgressIndicator extends StatefulWidget {
   /// Defaults will be used for everything except [controller] if they're not
   /// provided. [allowScrubbing] defaults to false, and [padding] will default
   /// to `top: 5.0`.
-  VideoProgressIndicator(this.controller, {
+  VideoProgressIndicator(
+    this.controller, {
     this.colors = const VideoProgressColors(),
     required this.allowScrubbing,
     this.padding = const EdgeInsets.only(top: 5.0),
@@ -947,13 +943,10 @@ class ClosedCaption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextStyle effectiveTextStyle = textStyle ??
-        DefaultTextStyle
-            .of(context)
-            .style
-            .copyWith(
-          fontSize: 36.0,
-          color: Colors.white,
-        );
+        DefaultTextStyle.of(context).style.copyWith(
+              fontSize: 36.0,
+              color: Colors.white,
+            );
 
     if (text == null) {
       return SizedBox.shrink();

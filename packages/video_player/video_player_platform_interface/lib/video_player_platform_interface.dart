@@ -187,10 +187,10 @@ class DataSource {
   final String? package;
 
   /// Duration for initialization
-  final Duration duration;
+  final Duration? duration;
 
   /// Enable log for analytics and network
-  final bool enableLog;
+  final bool? enableLog;
 }
 
 /// The way in which the video was originally loaded.
@@ -349,10 +349,10 @@ class DurationRange {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is DurationRange &&
-              runtimeType == other.runtimeType &&
-              start == other.start &&
-              end == other.end;
+      other is DurationRange &&
+          runtimeType == other.runtimeType &&
+          start == other.start &&
+          end == other.end;
 
   @override
   int get hashCode => start.hashCode ^ end.hashCode;
