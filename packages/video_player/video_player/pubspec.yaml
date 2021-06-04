@@ -42,7 +42,6 @@ dependencies:
       url: https://github.com/surfstudio/plugins.git
       ref: surf-video-player-2
       path: packages/video_player/video_player_web
-
 dev_dependencies:
   pedantic: ^1.10.0
   pigeon: ^0.2.1
