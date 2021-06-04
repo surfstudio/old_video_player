@@ -88,6 +88,7 @@ final class VideoPlayer {
 
     DataSource.Factory dataSourceFactory;
     if (isHTTP(uri)) {
+        //TODO: change this to flutter implementation without enableLog
       dataSourceFactory =
           new VideoPlayerHttpDataSourceFactory(
               "ExoPlayer",
