@@ -623,7 +623,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     player.isLoggingEnabled = input.enableLog.boolValue;
     return [self onPlayerSetup:player frameUpdater:frameUpdater];
   } else if (input.uri) {
-    NSDictionary* headers = input.headers;
+    NSDictionary* headers = input.httpHeaders;
     player = [[FLTVideoPlayer alloc] initWithURL:[NSURL URLWithString:input.uri]
                                     frameUpdater:frameUpdater
                                      httpHeaders:input.httpHeaders];
