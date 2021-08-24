@@ -192,7 +192,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     this.dataSource, {
     this.package,
     this.closedCaptionFile,
-    this.videoPlayerOptions,
+    this.videoPlayerOptions = const VideoPlayerOptions(),
     this.enableLog = false,
   })  : dataSourceType = DataSourceType.asset,
         formatHint = null,
@@ -212,7 +212,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     this.dataSource, {
     this.formatHint,
     this.closedCaptionFile,
-    this.videoPlayerOptions,
+    this.videoPlayerOptions = const VideoPlayerOptions(),
     this.httpHeaders = const {},
     this.enableLog = false,
   })  : dataSourceType = DataSourceType.network,
@@ -223,9 +223,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   ///
   /// This will load the file from the file-URI given by:
   /// `'file://${file.path}'`.
-  VideoPlayerController.file(File file,
-      {this.closedCaptionFile, this.videoPlayerOptions, this.enableLog = false})
-      : dataSource = 'file://${file.path}',
+  VideoPlayerController.file(
+    File file, {
+    this.closedCaptionFile,
+    this.videoPlayerOptions = const VideoPlayerOptions(),
+    this.enableLog = false,
+  })  : dataSource = 'file://${file.path}',
         dataSourceType = DataSourceType.file,
         package = null,
         formatHint = null,
@@ -250,7 +253,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   final DataSourceType dataSourceType;
 
   /// Provide additional configuration options (optional). Like setting the audio mode to mix
-  final VideoPlayerOptions? videoPlayerOptions;
+  final VideoPlayerOptions videoPlayerOptions;
 
   /// Only set for [asset] videos. The package that the asset was loaded from.
   final String? package;
@@ -270,7 +273,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   bool _isDisposed = false;
   Completer<void>? _creatingCompleter;
   StreamSubscription<dynamic>? _eventSubscription;
-  late _VideoAppLifeCycleObserver _lifeCycleObserver;
+  _VideoAppLifeCycleObserver? _lifeCycleObserver;
 
   /// The id of a texture that hasn't been initialized.
   @visibleForTesting
@@ -283,8 +286,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   /// Attempts to open the given [dataSource] and load metadata about the video.
   Future<void> initialize({Duration duration = Duration.zero}) async {
-    _lifeCycleObserver = _VideoAppLifeCycleObserver(this);
-    _lifeCycleObserver.initialize();
+    if (videoPlayerOptions.observeAppLifecycle) {
+      _lifeCycleObserver = _VideoAppLifeCycleObserver(this);
+    }
+    _lifeCycleObserver?.initialize();
     _creatingCompleter = Completer<void>();
 
     late DataSource dataSourceDescription;
@@ -318,9 +323,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         break;
     }
 
-    if (videoPlayerOptions?.mixWithOthers != null) {
+    if (videoPlayerOptions.mixWithOthers != null) {
       await _videoPlayerPlatform
-          .setMixWithOthers(videoPlayerOptions!.mixWithOthers);
+          .setMixWithOthers(videoPlayerOptions.mixWithOthers);
     }
 
     _textureId = (await _videoPlayerPlatform.create(dataSourceDescription)) ??
@@ -397,7 +402,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         await _eventSubscription?.cancel();
         await _videoPlayerPlatform.dispose(_textureId);
       }
-      _lifeCycleObserver.dispose();
+      _lifeCycleObserver?.dispose();
     }
     _isDisposed = true;
     super.dispose();
