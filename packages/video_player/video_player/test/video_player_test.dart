@@ -70,7 +70,7 @@ class FakeController extends ValueNotifier<VideoPlayerValue>
   Future<ClosedCaptionFile> get closedCaptionFile => _loadClosedCaption();
 
   @override
-  VideoPlayerOptions? get videoPlayerOptions => null;
+  VideoPlayerOptions get videoPlayerOptions => const VideoPlayerOptions();
 
   @override
   bool get enableLog => false;
@@ -697,7 +697,7 @@ void main() {
         File(''),
         videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true));
     await controller.initialize();
-    expect(controller.videoPlayerOptions!.mixWithOthers, true);
+    expect(controller.videoPlayerOptions.mixWithOthers, true);
   });
 }
 

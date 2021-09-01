@@ -373,7 +373,7 @@ class VideoPlayerOptions {
   final bool mixWithOthers;
 
   /// set additional optional player settings
-  VideoPlayerOptions({
+  const VideoPlayerOptions({
     this.mixWithOthers = false,
     this.observeAppLifecycle = true,
   });
