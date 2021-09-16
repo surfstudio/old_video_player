@@ -221,7 +221,7 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
       closedCaptionFile: _loadCaptions(),
       videoPlayerOptions: VideoPlayerOptions(
         mixWithOthers: true,
-        observeAppLifecycle: true,
+        observeAppLifecycle: false,
       ),
     );
 
