@@ -44,6 +44,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic, readonly) bool disposed;
 @property(nonatomic, readonly) bool isPlaying;
 @property(nonatomic) bool isLooping;
+@property(nonatomic) double currentPlaybackSpeed;
 @property(nonatomic, readonly) bool isInitialized;
 @property(assign, nonatomic) int seekTime;
 @property(assign, nonatomic) int startTime;
@@ -373,6 +374,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   if(!_isPipActive) {
       if (_isPlaying) {
           [_player play];
+          [self setPlaybackSpeed:_currentPlaybackSpeed];
       } else {
           [_player pause];
       }
@@ -474,6 +476,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     return;
   }
 
+  [self setCurrentPlaybackSpeed:speed];
   _player.rate = speed;
 }
 
