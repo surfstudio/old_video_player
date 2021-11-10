@@ -14,7 +14,7 @@ import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.Player.EventListener;
+import com.google.android.exoplayer2.Player.Listener;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -88,16 +88,18 @@ final class VideoPlayer {
 
     DataSource.Factory dataSourceFactory;
     if (isHTTP(uri)) {
-        //TODO: change this to flutter implementation without enableLog
-      dataSourceFactory =
-          new VideoPlayerHttpDataSourceFactory(
-              "ExoPlayer",
-              this.needLogging ? new TransferListenerImpl() : null,
-              DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
-              DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
-              true,
-              httpHeaders,
-              enableLog);
+      DefaultHttpDataSource.Factory httpDataSourceFactory =
+          new DefaultHttpDataSource.Factory()
+              .setUserAgent("ExoPlayer")
+              .setAllowCrossProtocolRedirects(true);
+
+      if (httpHeaders != null && !httpHeaders.isEmpty()) {
+        httpDataSourceFactory.setDefaultRequestProperties(httpHeaders);
+      }
+      if (this.needLogging) {
+        httpDataSourceFactory.setTransferListener(new TransferListenerImpl());
+      }
+      dataSourceFactory = httpDataSourceFactory;
     } else {
       dataSourceFactory = new DefaultDataSourceFactory(context, "ExoPlayer");
     }
@@ -169,7 +171,6 @@ final class VideoPlayer {
   @SuppressWarnings("deprecation")
   private void setupVideoPlayer(
       EventChannel eventChannel, TextureRegistry.SurfaceTextureEntry textureEntry) {
-
     eventChannel.setStreamHandler(
         new EventChannel.StreamHandler() {
           @Override
@@ -190,7 +191,7 @@ final class VideoPlayer {
     if (needLogging) exoPlayer.addAnalyticsListener(new EventLogger(new DefaultTrackSelector()));
 
     exoPlayer.addListener(
-        new EventListener() {
+        new Listener() {
           private boolean isBuffering = false;
 
           public void setBuffering(boolean buffering) {

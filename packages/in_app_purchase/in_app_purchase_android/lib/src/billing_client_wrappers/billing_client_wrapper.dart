@@ -3,14 +3,17 @@
 // found in the LICENSE file.
 
 import 'dart:async';
-import 'package:flutter/services.dart';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:json_annotation/json_annotation.dart';
+
 import '../../billing_client_wrappers.dart';
 import '../channel.dart';
 import 'purchase_wrapper.dart';
 import 'sku_details_wrapper.dart';
-import 'enum_converters.dart';
+
+part 'billing_client_wrapper.g.dart';
 
 /// Method identifier for the OnPurchaseUpdated method channel method.
 @visibleForTesting
@@ -301,6 +304,36 @@ class BillingClient {
         <String, dynamic>{});
   }
 
+  /// Checks if the specified feature or capability is supported by the Play Store.
+  /// Call this to check if a [BillingClientFeature] is supported by the device.
+  Future<bool> isFeatureSupported(BillingClientFeature feature) async {
+    var result = await channel.invokeMethod<bool>(
+        'BillingClient#isFeatureSupported(String)', <String, dynamic>{
+      'feature': BillingClientFeatureConverter().toJson(feature),
+    });
+    return result ?? false;
+  }
+
+  /// Initiates a flow to confirm the change of price for an item subscribed by the user.
+  ///
+  /// When the price of a user subscribed item has changed, launch this flow to take users to
+  /// a screen with price change information. User can confirm the new price or cancel the flow.
+  ///
+  /// The skuDetails needs to have already been fetched in a [querySkuDetails]
+  /// call.
+  Future<BillingResultWrapper> launchPriceChangeConfirmationFlow(
+      {required String sku}) async {
+    assert(sku != null);
+    final Map<String, dynamic> arguments = <String, dynamic>{
+      'sku': sku,
+    };
+    return BillingResultWrapper.fromJson((await channel.invokeMapMethod<String,
+                dynamic>(
+            'BillingClient#launchPriceChangeConfirmationFlow (Activity, PriceChangeFlowParams, PriceChangeConfirmationListener)',
+            arguments)) ??
+        <String, dynamic>{});
+  }
+
   /// The method call handler for [channel].
   @visibleForTesting
   Future<void> callHandler(MethodCall call) async {
@@ -334,6 +367,7 @@ typedef void OnBillingServiceDisconnected();
 /// [`BillingClient.BillingResponse`](https://developer.android.com/reference/com/android/billingclient/api/BillingClient.BillingResponse).
 /// See the `BillingResponse` docs for more explanation of the different
 /// constants.
+@JsonEnum(alwaysCreate: true)
 enum BillingResponse {
   // WARNING: Changes to this class need to be reflected in our generated code.
   // Run `flutter packages pub run build_runner watch` to rebuild and watch for
@@ -388,11 +422,32 @@ enum BillingResponse {
   itemNotOwned,
 }
 
+/// Serializer for [BillingResponse].
+///
+/// Use these in `@JsonSerializable()` classes by annotating them with
+/// `@BillingResponseConverter()`.
+class BillingResponseConverter implements JsonConverter<BillingResponse, int?> {
+  /// Default const constructor.
+  const BillingResponseConverter();
+
+  @override
+  BillingResponse fromJson(int? json) {
+    if (json == null) {
+      return BillingResponse.error;
+    }
+    return $enumDecode(_$BillingResponseEnumMap, json);
+  }
+
+  @override
+  int toJson(BillingResponse object) => _$BillingResponseEnumMap[object]!;
+}
+
 /// Enum representing potential [SkuDetailsWrapper.type]s.
 ///
 /// Wraps
 /// [`BillingClient.SkuType`](https://developer.android.com/reference/com/android/billingclient/api/BillingClient.SkuType)
 /// See the linked documentation for an explanation of the different constants.
+@JsonEnum(alwaysCreate: true)
 enum SkuType {
   // WARNING: Changes to this class need to be reflected in our generated code.
   // Run `flutter packages pub run build_runner watch` to rebuild and watch for
@@ -407,6 +462,26 @@ enum SkuType {
   subs,
 }
 
+/// Serializer for [SkuType].
+///
+/// Use these in `@JsonSerializable()` classes by annotating them with
+/// `@SkuTypeConverter()`.
+class SkuTypeConverter implements JsonConverter<SkuType, String?> {
+  /// Default const constructor.
+  const SkuTypeConverter();
+
+  @override
+  SkuType fromJson(String? json) {
+    if (json == null) {
+      return SkuType.inapp;
+    }
+    return $enumDecode(_$SkuTypeEnumMap, json);
+  }
+
+  @override
+  String toJson(SkuType object) => _$SkuTypeEnumMap[object]!;
+}
+
 /// Enum representing the proration mode.
 ///
 /// When upgrading or downgrading a subscription, set this mode to provide details
@@ -414,6 +489,7 @@ enum SkuType {
 ///
 /// Wraps [`BillingFlowParams.ProrationMode`](https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode)
 /// See the linked documentation for an explanation of the different constants.
+@JsonEnum(alwaysCreate: true)
 enum ProrationMode {
 // WARNING: Changes to this class need to be reflected in our generated code.
 // Run `flutter packages pub run build_runner watch` to rebuild and watch for
@@ -445,4 +521,74 @@ enum ProrationMode {
   /// Replacement takes effect when the old plan expires, and the new price will be charged at the same time.
   @JsonValue(4)
   deferred,
+}
+
+/// Serializer for [ProrationMode].
+///
+/// Use these in `@JsonSerializable()` classes by annotating them with
+/// `@ProrationModeConverter()`.
+class ProrationModeConverter implements JsonConverter<ProrationMode, int?> {
+  /// Default const constructor.
+  const ProrationModeConverter();
+
+  @override
+  ProrationMode fromJson(int? json) {
+    if (json == null) {
+      return ProrationMode.unknownSubscriptionUpgradeDowngradePolicy;
+    }
+    return $enumDecode(_$ProrationModeEnumMap, json);
+  }
+
+  @override
+  int toJson(ProrationMode object) => _$ProrationModeEnumMap[object]!;
+}
+
+/// Features/capabilities supported by [BillingClient.isFeatureSupported()](https://developer.android.com/reference/com/android/billingclient/api/BillingClient.FeatureType).
+@JsonEnum(alwaysCreate: true)
+enum BillingClientFeature {
+  // WARNING: Changes to this class need to be reflected in our generated code.
+  // Run `flutter packages pub run build_runner watch` to rebuild and watch for
+  // further changes.
+
+  // JsonValues need to match constant values defined in https://developer.android.com/reference/com/android/billingclient/api/BillingClient.FeatureType#summary
+  /// Purchase/query for in-app items on VR.
+  @JsonValue('inAppItemsOnVr')
+  inAppItemsOnVR,
+
+  /// Launch a price change confirmation flow.
+  @JsonValue('priceChangeConfirmation')
+  priceChangeConfirmation,
+
+  /// Purchase/query for subscriptions.
+  @JsonValue('subscriptions')
+  subscriptions,
+
+  /// Purchase/query for subscriptions on VR.
+  @JsonValue('subscriptionsOnVr')
+  subscriptionsOnVR,
+
+  /// Subscriptions update/replace.
+  @JsonValue('subscriptionsUpdate')
+  subscriptionsUpdate
+}
+
+/// Serializer for [BillingClientFeature].
+///
+/// Use these in `@JsonSerializable()` classes by annotating them with
+/// `@BillingClientFeatureConverter()`.
+class BillingClientFeatureConverter
+    implements JsonConverter<BillingClientFeature, String> {
+  /// Default const constructor.
+  const BillingClientFeatureConverter();
+
+  @override
+  BillingClientFeature fromJson(String json) {
+    return $enumDecode<BillingClientFeature, dynamic>(
+        _$BillingClientFeatureEnumMap.cast<BillingClientFeature, dynamic>(),
+        json);
+  }
+
+  @override
+  String toJson(BillingClientFeature object) =>
+      _$BillingClientFeatureEnumMap[object]!;
 }
