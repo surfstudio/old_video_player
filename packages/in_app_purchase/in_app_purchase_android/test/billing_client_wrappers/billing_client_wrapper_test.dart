@@ -2,15 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:in_app_purchase_android/billing_client_wrappers.dart';
-import 'package:in_app_purchase_android/src/billing_client_wrappers/enum_converters.dart';
 import 'package:in_app_purchase_android/src/channel.dart';
 
 import '../stub_in_app_purchase_platform.dart';
-import 'sku_details_wrapper_test.dart';
 import 'purchase_wrapper_test.dart';
+import 'sku_details_wrapper_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -542,6 +541,76 @@ void main() {
           equals(BillingResultWrapper(
               responseCode: BillingResponse.error,
               debugMessage: kInvalidBillingResultErrorMessage)));
+    });
+  });
+
+  group('isFeatureSupported', () {
+    const String isFeatureSupportedMethodName =
+        'BillingClient#isFeatureSupported(String)';
+    test('isFeatureSupported returns false', () async {
+      late Map<Object?, Object?> arguments;
+      stubPlatform.addResponse(
+        name: isFeatureSupportedMethodName,
+        value: false,
+        additionalStepBeforeReturn: (value) => arguments = value,
+      );
+      final bool isSupported = await billingClient
+          .isFeatureSupported(BillingClientFeature.subscriptions);
+      expect(isSupported, isFalse);
+      expect(arguments['feature'], equals('subscriptions'));
+    });
+
+    test('isFeatureSupported returns true', () async {
+      late Map<Object?, Object?> arguments;
+      stubPlatform.addResponse(
+        name: isFeatureSupportedMethodName,
+        value: true,
+        additionalStepBeforeReturn: (value) => arguments = value,
+      );
+      final bool isSupported = await billingClient
+          .isFeatureSupported(BillingClientFeature.subscriptions);
+      expect(isSupported, isTrue);
+      expect(arguments['feature'], equals('subscriptions'));
+    });
+  });
+
+  group('launchPriceChangeConfirmationFlow', () {
+    const String launchPriceChangeConfirmationFlowMethodName =
+        'BillingClient#launchPriceChangeConfirmationFlow (Activity, PriceChangeFlowParams, PriceChangeConfirmationListener)';
+
+    final expectedBillingResultPriceChangeConfirmation = BillingResultWrapper(
+      responseCode: BillingResponse.ok,
+      debugMessage: 'dummy message',
+    );
+
+    test('serializes and deserializes data', () async {
+      stubPlatform.addResponse(
+        name: launchPriceChangeConfirmationFlowMethodName,
+        value:
+            buildBillingResultMap(expectedBillingResultPriceChangeConfirmation),
+      );
+
+      expect(
+        await billingClient.launchPriceChangeConfirmationFlow(
+          sku: dummySkuDetails.sku,
+        ),
+        equals(expectedBillingResultPriceChangeConfirmation),
+      );
+    });
+
+    test('passes sku to launchPriceChangeConfirmationFlow', () async {
+      stubPlatform.addResponse(
+        name: launchPriceChangeConfirmationFlowMethodName,
+        value:
+            buildBillingResultMap(expectedBillingResultPriceChangeConfirmation),
+      );
+      await billingClient.launchPriceChangeConfirmationFlow(
+        sku: dummySkuDetails.sku,
+      );
+      final MethodCall call = stubPlatform
+          .previousCallMatching(launchPriceChangeConfirmationFlowMethodName);
+      expect(call.arguments,
+          equals(<dynamic, dynamic>{'sku': dummySkuDetails.sku}));
     });
   });
 }
