@@ -96,7 +96,7 @@ class VideoPlayerValue {
   /// If [hasError] is false this is `null`.
   final String? errorDescription;
 
-  /// Indicates if the error on platrform related to Internet connection
+  /// (Only for iOS) Indicates if the error on platform related to Internet connection
   final bool hasInternetError;
 
   /// The [size] of the currently loaded video.
@@ -410,10 +410,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       final PlatformException e = obj as PlatformException;
       if (_nonFatalExceptions.contains(e.message)) return;
 
-      // Если получаем ошибку с кодом VideoError - не пересоздаем контроллер через erroneous
+      // Только для iOS. Если получаем ошибку с кодом VideoError -
+      // не пересоздаем контроллер через VideoPlayerValue.erroneous
       // Сохраняем текущее состояние и устанавливаем флаг hasInternetError
       // Вероятно, все ошибки с кодом VideoError - отсутствие интернета
-      if (e.code.contains('VideoError')) {
+      if (Platform.isIOS && e.code.contains('VideoError')) {
         final valueWithFlag = value.copyWith(hasInternetError: true);
         value = valueWithFlag;
       } else {
