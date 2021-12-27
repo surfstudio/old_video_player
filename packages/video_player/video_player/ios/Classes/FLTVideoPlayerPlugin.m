@@ -127,17 +127,17 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
   if (notification.name == AVPlayerItemFailedToPlayToEndTimeNotification) {
     NSError *error = notification.userInfo[AVPlayerItemFailedToPlayToEndTimeErrorKey];
     [self log:[NSString stringWithFormat:@"Player error occured: %@, %@", error.localizedDescription, [NSString stringWithUTF8String:error.domain.UTF8String]]];
-    _eventSink([FlutterError errorWithCode:@"VideoError" message:[@"Failed to load video: " stringByAppendingString:error.localizedDescription] details:[self createErrorInfoFromError:error]]);
+    _eventSink([FlutterError errorWithCode:@"InternetVideoError" message:[@"Failed to load video: " stringByAppendingString:error.localizedDescription] details:[self createErrorInfoFromError:error]]);
   } else {
     AVPlayerItemErrorLog *log = self.player.currentItem.errorLog;
 
     if ([log.events count]) {
       AVPlayerItemErrorLogEvent *e = log.events.lastObject;
       [self log:[NSString stringWithFormat:@"Player error occured: %@", e.errorComment]];
-      _eventSink([FlutterError errorWithCode:@"VideoError" message:[NSString stringWithFormat: @"Failed to load video: %@", e.errorComment] details:[self createErrorInfoFromLogEvent:e]]);
+      _eventSink([FlutterError errorWithCode:@"InternetVideoError" message:[NSString stringWithFormat: @"Failed to load video: %@", e.errorComment] details:[self createErrorInfoFromLogEvent:e]]);
     } else {
       [self log:@"Unknown player error occured"];
-      _eventSink([FlutterError errorWithCode:@"VideoError" message:@"Failed to load video: Вероятно, соединение с интернетом прервано." details:nil]);
+      _eventSink([FlutterError errorWithCode:@"InternetVideoError" message:@"Failed to load video: Вероятно, соединение с интернетом прервано." details:nil]);
     }
   }
 }

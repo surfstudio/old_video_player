@@ -410,11 +410,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       final PlatformException e = obj as PlatformException;
       if (_nonFatalExceptions.contains(e.message)) return;
 
-      // Только для iOS. Если получаем ошибку с кодом VideoError -
+      // Только для iOS. Если получаем ошибку с кодом InternetVideoError -
       // не пересоздаем контроллер через VideoPlayerValue.erroneous
       // Сохраняем текущее состояние и устанавливаем флаг hasInternetError
-      // Вероятно, все ошибки с кодом VideoError - отсутствие интернета
-      if (Platform.isIOS && e.code.contains('VideoError')) {
+      // Вероятно, все ошибки с кодом InternetVideoError - отсутствие интернета
+      if (Platform.isIOS && e.code.contains('InternetVideoError')) {
         final valueWithFlag = value.copyWith(hasInternetError: true);
         value = valueWithFlag;
       } else {
