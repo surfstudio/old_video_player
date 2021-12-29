@@ -6,6 +6,8 @@
 
 /// An example of using the plugin, controlling lifecycle and playback of the
 /// video.
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -206,6 +208,7 @@ class _BumbleBeeRemoteVideo extends StatefulWidget {
 
 class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
   late VideoPlayerController _controller;
+  Timer? _periodicReInitializeTimer;
 
   Future<ClosedCaptionFile> _loadCaptions() async {
     final String fileContents = await DefaultAssetBundle.of(context)
@@ -218,7 +221,7 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
   void initState() {
     super.initState();
     _controller = VideoPlayerController.network(
-      'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+      'https://0c6d038a-3309-416c-8331-7a5a3be3ce8b.selcdn.net/media/videos/57d64ee9-fe94-403c-b688-8c7841b392a3/master.m3u8',
       closedCaptionFile: _loadCaptions(),
       videoPlayerOptions: VideoPlayerOptions(
         mixWithOthers: true,
@@ -229,6 +232,7 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
     _controller.addListener(() {
       setState(() {});
     });
+    _startTimer();
     _controller.setLooping(true);
     _controller.initialize();
   }
@@ -257,13 +261,44 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
                   ClosedCaption(text: _controller.value.caption.text),
                   _ControlsOverlay(controller: _controller),
                   VideoProgressIndicator(_controller, allowScrubbing: true),
+                  if (_controller.value.isBuffering)
+                    Center(child: CircularProgressIndicator())
                 ],
               ),
             ),
           ),
+          Wrap(
+            children: [
+              Text('isBuffering: ${_controller.value.isBuffering}'),
+              Text(
+                'hasInternetError: ${_controller.value.hasInternetError}',
+              ),
+              Text('hasError: ${_controller.value.hasError}'),
+              Text('isInitialized: ${_controller.value.isInitialized}'),
+              Text('position: ${_controller.value.position}'),
+              ElevatedButton.icon(
+                onPressed: _controller.initialize,
+                icon: Icon(Icons.add),
+                label: Text('Init'),
+              ),
+            ]
+                .map((child) => Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: child,
+                    ))
+                .toList(),
+          ),
         ],
       ),
     );
+  }
+
+  void _startTimer() {
+    _periodicReInitializeTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_controller.value.hasError) {
+        _controller.initialize();
+      }
+    });
   }
 }
 
