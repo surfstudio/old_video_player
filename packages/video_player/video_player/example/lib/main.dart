@@ -12,10 +12,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
 void main() {
   runApp(
     MaterialApp(
       home: _App(),
+      navigatorObservers: [routeObserver],
     ),
   );
 }
@@ -64,6 +67,53 @@ class _App extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class VideoControllerNavigationHandler extends StatefulWidget {
+  final VideoPlayerController videoPlayerController;
+  final Widget child;
+  const VideoControllerNavigationHandler({
+    required this.videoPlayerController,
+    required this.child,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  _VideoControllerNavigationHandlerState createState() =>
+      _VideoControllerNavigationHandlerState();
+}
+
+class _VideoControllerNavigationHandlerState
+    extends State<VideoControllerNavigationHandler> with RouteAware {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPushNext() {
+    // TODO: implement didPushNext
+    super.didPushNext();
+    widget.videoPlayerController.pause();
+  }
+
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    widget.videoPlayerController.play();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }
 
@@ -202,6 +252,9 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
 }
 
 class _BumbleBeeRemoteVideo extends StatefulWidget {
+  final bool needReinitialize;
+
+  const _BumbleBeeRemoteVideo({Key? key, this.needReinitialize = true}) : super(key: key);
   @override
   _BumbleBeeRemoteVideoState createState() => _BumbleBeeRemoteVideoState();
 }
@@ -232,70 +285,80 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
     _controller.addListener(() {
       setState(() {});
     });
-    _startTimer();
+    if (widget.needReinitialize) _startTimer();
     _controller.setLooping(true);
     _controller.initialize();
   }
 
   @override
   void dispose() {
+    _periodicReInitializeTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: <Widget>[
-          Container(padding: const EdgeInsets.only(top: 20.0)),
-          const Text('With remote mp4'),
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: AspectRatio(
-              aspectRatio: _controller.value.aspectRatio,
-              child: Stack(
-                alignment: Alignment.bottomCenter,
-                children: <Widget>[
-                  VideoPlayer(_controller),
-                  ClosedCaption(text: _controller.value.caption.text),
-                  _ControlsOverlay(controller: _controller),
-                  VideoProgressIndicator(_controller, allowScrubbing: true),
-                  if (_controller.value.isBuffering)
-                    Center(child: CircularProgressIndicator())
-                ],
+    return VideoControllerNavigationHandler(
+      videoPlayerController: _controller,
+      child: SingleChildScrollView(
+        child: Column(
+          children: <Widget>[
+            Container(padding: const EdgeInsets.only(top: 20.0)),
+            const Text('With remote mp4'),
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: AspectRatio(
+                aspectRatio: _controller.value.aspectRatio,
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: <Widget>[
+                    VideoPlayer(_controller),
+                    ClosedCaption(text: _controller.value.caption.text),
+                    _ControlsOverlay(controller: _controller),
+                    VideoProgressIndicator(_controller, allowScrubbing: true),
+                    if (_controller.value.isBuffering)
+                      Center(child: CircularProgressIndicator())
+                  ],
+                ),
               ),
             ),
-          ),
-          Wrap(
-            children: [
-              Text('isBuffering: ${_controller.value.isBuffering}'),
-              Text(
-                'hasInternetError: ${_controller.value.hasInternetError}',
-              ),
-              Text('hasError: ${_controller.value.hasError}'),
-              Text('isInitialized: ${_controller.value.isInitialized}'),
-              Text('position: ${_controller.value.position}'),
-              ElevatedButton.icon(
-                onPressed: _controller.initialize,
-                icon: Icon(Icons.add),
-                label: Text('Init'),
-              ),
-            ]
-                .map((child) => Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: child,
-                    ))
-                .toList(),
-          ),
-        ],
+            Wrap(
+              children: [
+                Text('isBuffering: ${_controller.value.isBuffering}'),
+                Text(
+                  'hasInternetError: ${_controller.value.hasInternetError}',
+                ),
+                Text('hasError: ${_controller.value.hasError}'),
+                Text('isInitialized: ${_controller.value.isInitialized}'),
+                Text('position: ${_controller.value.position}'),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context)
+                      .push(CupertinoPageRoute(builder: (context) {
+                    return Scaffold(
+                      body: Center(child: _BumbleBeeRemoteVideo(needReinitialize:false)),
+                    );
+                  })),
+                  icon: Icon(Icons.add),
+                  label: Text('Go to new screen'),
+                ),
+              ]
+                  .map((child) => Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: child,
+                      ))
+                  .toList(),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _startTimer() {
-    _periodicReInitializeTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _periodicReInitializeTimer = Timer.periodic(Duration(seconds: 2), (timer) {
       if (_controller.value.hasError) {
+        print('trying to reinitialize');
         _controller.initialize();
       }
     });
@@ -326,22 +389,25 @@ class _ControlsOverlay extends StatelessWidget {
         AnimatedSwitcher(
           duration: Duration(milliseconds: 50),
           reverseDuration: Duration(milliseconds: 200),
-          child: controller.value.isPlaying
-              ? SizedBox.shrink()
-              : Container(
-                  color: Colors.black26,
-                  child: Center(
-                    child: Icon(
-                      Icons.play_arrow,
-                      color: Colors.white,
-                      size: 100.0,
-                      semanticLabel: 'Play',
+          child: controller.value.hasError
+              ? Container(color: Colors.black26)
+              : controller.value.isPlaying
+                  ? SizedBox.expand()
+                  : Container(
+                      color: Colors.black26,
+                      child: Center(
+                        child: Icon(
+                          Icons.play_arrow,
+                          color: Colors.white,
+                          size: 100.0,
+                          semanticLabel: 'Play',
+                        ),
+                      ),
                     ),
-                  ),
-                ),
         ),
         GestureDetector(
           onTap: () {
+            if (controller.value.hasError) return;
             controller.value.isPlaying ? controller.pause() : controller.play();
           },
         ),
