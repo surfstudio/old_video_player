@@ -306,6 +306,11 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
   _player = [AVPlayer playerWithPlayerItem:item];
   _player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
+  if (@available(iOS 12.0, *)) {
+      _player.preventsDisplaySleepDuringVideoPlayback = NO;
+  } else {
+      // Do nothing on earlier versions
+  }
 
   self.seekTime = -1;
 
