@@ -21,7 +21,7 @@ dependencies:
   meta: ^1.1.7
   video_player_platform_interface: #^2.2.0
     git:
-      url: https://github.com/surfstudio/plugins.git
+      url: https://github.com/surfstudio/old_video_player.git
       ref: surf-video-player
       path: packages/video_player/video_player_platform_interface
 
