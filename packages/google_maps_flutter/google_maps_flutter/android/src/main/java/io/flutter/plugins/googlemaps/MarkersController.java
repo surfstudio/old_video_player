@@ -1,4 +1,4 @@
-// Copyright 2019 The Chromium Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -103,6 +103,28 @@ class MarkersController {
       return markerController.consumeTapEvents();
     }
     return false;
+  }
+
+  void onMarkerDragStart(String googleMarkerId, LatLng latLng) {
+    String markerId = googleMapsMarkerIdToDartMarkerId.get(googleMarkerId);
+    if (markerId == null) {
+      return;
+    }
+    final Map<String, Object> data = new HashMap<>();
+    data.put("markerId", markerId);
+    data.put("position", Convert.latLngToJson(latLng));
+    methodChannel.invokeMethod("marker#onDragStart", data);
+  }
+
+  void onMarkerDrag(String googleMarkerId, LatLng latLng) {
+    String markerId = googleMapsMarkerIdToDartMarkerId.get(googleMarkerId);
+    if (markerId == null) {
+      return;
+    }
+    final Map<String, Object> data = new HashMap<>();
+    data.put("markerId", markerId);
+    data.put("position", Convert.latLngToJson(latLng));
+    methodChannel.invokeMethod("marker#onDrag", data);
   }
 
   void onMarkerDragEnd(String googleMarkerId, LatLng latLng) {

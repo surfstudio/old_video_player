@@ -1,4 +1,4 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -294,6 +294,28 @@ static UIImage* ExtractIcon(NSObject<FlutterPluginRegistrar>* registrar, NSArray
   }
   [_methodChannel invokeMethod:@"marker#onTap" arguments:@{@"markerId" : markerId}];
   return controller.consumeTapEvents;
+}
+- (void)onMarkerDragStart:(NSString*)markerId coordinate:(CLLocationCoordinate2D)coordinate {
+  if (!markerId) {
+    return;
+  }
+  FLTGoogleMapMarkerController* controller = _markerIdToController[markerId];
+  if (!controller) {
+    return;
+  }
+  [_methodChannel invokeMethod:@"marker#onDragStart"
+                     arguments:@{@"markerId" : markerId, @"position" : PositionToJson(coordinate)}];
+}
+- (void)onMarkerDrag:(NSString*)markerId coordinate:(CLLocationCoordinate2D)coordinate {
+  if (!markerId) {
+    return;
+  }
+  FLTGoogleMapMarkerController* controller = _markerIdToController[markerId];
+  if (!controller) {
+    return;
+  }
+  [_methodChannel invokeMethod:@"marker#onDrag"
+                     arguments:@{@"markerId" : markerId, @"position" : PositionToJson(coordinate)}];
 }
 - (void)onMarkerDragEnd:(NSString*)markerId coordinate:(CLLocationCoordinate2D)coordinate {
   if (!markerId) {

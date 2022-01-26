@@ -1,4 +1,4 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -100,6 +100,26 @@ class InfoWindowTapEvent extends MapEvent<MarkerId> {
   ///
   /// The `value` of this event is a [MarkerId] object that represents the tapped InfoWindow.
   InfoWindowTapEvent(int mapId, MarkerId markerId) : super(mapId, markerId);
+}
+
+/// An event fired when a [Marker] is starting to be dragged to a new [LatLng].
+class MarkerDragStartEvent extends _PositionedMapEvent<MarkerId> {
+  /// Build a MarkerDragStart Event triggered from the map represented by `mapId`.
+  ///
+  /// The `position` on this event is the [LatLng] on which the Marker was picked up from.
+  /// The `value` of this event is a [MarkerId] object that represents the Marker.
+  MarkerDragStartEvent(int mapId, LatLng position, MarkerId markerId)
+      : super(mapId, position, markerId);
+}
+
+/// An event fired when a [Marker] is being dragged to a new [LatLng].
+class MarkerDragEvent extends _PositionedMapEvent<MarkerId> {
+  /// Build a MarkerDrag Event triggered from the map represented by `mapId`.
+  ///
+  /// The `position` on this event is the [LatLng] on which the Marker was dragged to.
+  /// The `value` of this event is a [MarkerId] object that represents the Marker.
+  MarkerDragEvent(int mapId, LatLng position, MarkerId markerId)
+      : super(mapId, position, markerId);
 }
 
 /// An event fired when a [Marker] is dragged to a new [LatLng].

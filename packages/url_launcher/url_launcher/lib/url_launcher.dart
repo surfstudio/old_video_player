@@ -1,4 +1,4 @@
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -16,7 +16,7 @@ import 'package:url_launcher_platform_interface/url_launcher_platform_interface.
 /// schemes which cannot be handled, that is when [canLaunch] would complete
 /// with false.
 ///
-/// [forceSafariVC] is only used in iOS with iOS version >= 9.0. By default (when unset), the launcher
+/// By default when [forceSafariVC] is unset, the launcher
 /// opens web URLs in the Safari View Controller, anything else is opened
 /// using the default handler on the platform. If set to true, it opens the
 /// URL in the Safari View Controller. If false, the URL is opened in the
@@ -62,18 +62,19 @@ import 'package:url_launcher_platform_interface/url_launcher_platform_interface.
 /// is set to true and the universal link failed to launch.
 Future<bool> launch(
   String urlString, {
-  bool forceSafariVC,
-  bool forceWebView,
-  bool enableJavaScript,
-  bool enableDomStorage,
-  bool universalLinksOnly,
-  Map<String, String> headers,
-  Brightness statusBarBrightness,
-  String webOnlyWindowName,
+  bool? forceSafariVC,
+  bool forceWebView = false,
+  bool enableJavaScript = false,
+  bool enableDomStorage = false,
+  bool universalLinksOnly = false,
+  Map<String, String> headers = const <String, String>{},
+  Brightness? statusBarBrightness,
+  String? webOnlyWindowName,
 }) async {
-  assert(urlString != null);
-  final Uri url = Uri.parse(urlString.trimLeft());
-  final bool isWebURL = url.scheme == 'http' || url.scheme == 'https';
+  final Uri? url = Uri.tryParse(urlString.trimLeft());
+  final bool isWebURL =
+      url != null && (url.scheme == 'http' || url.scheme == 'https');
+
   if ((forceSafariVC == true || forceWebView == true) && !isWebURL) {
     throw PlatformException(
         code: 'NOT_A_WEB_SCHEME',
@@ -84,29 +85,37 @@ Future<bool> launch(
   /// [true] so that ui is automatically computed if [statusBarBrightness] is set.
   bool previousAutomaticSystemUiAdjustment = true;
   if (statusBarBrightness != null &&
-      defaultTargetPlatform == TargetPlatform.iOS) {
-    previousAutomaticSystemUiAdjustment =
-        WidgetsBinding.instance.renderView.automaticSystemUiAdjustment;
-    WidgetsBinding.instance.renderView.automaticSystemUiAdjustment = false;
+      defaultTargetPlatform == TargetPlatform.iOS &&
+      _ambiguate(WidgetsBinding.instance) != null) {
+    previousAutomaticSystemUiAdjustment = _ambiguate(WidgetsBinding.instance)!
+        .renderView
+        .automaticSystemUiAdjustment;
+    _ambiguate(WidgetsBinding.instance)!
+        .renderView
+        .automaticSystemUiAdjustment = false;
     SystemChrome.setSystemUIOverlayStyle(statusBarBrightness == Brightness.light
         ? SystemUiOverlayStyle.dark
         : SystemUiOverlayStyle.light);
   }
+
   final bool result = await UrlLauncherPlatform.instance.launch(
     urlString,
     useSafariVC: forceSafariVC ?? isWebURL,
-    useWebView: forceWebView ?? false,
-    enableJavaScript: enableJavaScript ?? false,
-    enableDomStorage: enableDomStorage ?? false,
-    universalLinksOnly: universalLinksOnly ?? false,
-    headers: headers ?? <String, String>{},
+    useWebView: forceWebView,
+    enableJavaScript: enableJavaScript,
+    enableDomStorage: enableDomStorage,
+    universalLinksOnly: universalLinksOnly,
+    headers: headers,
     webOnlyWindowName: webOnlyWindowName,
   );
-  assert(previousAutomaticSystemUiAdjustment != null);
-  if (statusBarBrightness != null) {
-    WidgetsBinding.instance.renderView.automaticSystemUiAdjustment =
-        previousAutomaticSystemUiAdjustment;
+
+  if (statusBarBrightness != null &&
+      _ambiguate(WidgetsBinding.instance) != null) {
+    _ambiguate(WidgetsBinding.instance)!
+        .renderView
+        .automaticSystemUiAdjustment = previousAutomaticSystemUiAdjustment;
   }
+
   return result;
 }
 
@@ -115,12 +124,11 @@ Future<bool> launch(
 ///
 /// On Android (from API 30), [canLaunch] will return `false` when the required
 /// visibility configuration is not provided in the AndroidManifest.xml file.
-/// For more information see the [Managing package visibility](https://developer.android.com/training/basics/intents/package-visibility)
-/// article in the Android docs.
+/// For more information see the
+/// [Package visibility filtering on Android](https://developer.android.com/training/basics/intents/package-visibility)
+/// article in the Android documentation or the url_launcher example app's
+/// [AndroidManifest.xml's queries element](https://github.com/flutter/plugins/blob/master/packages/url_launcher/url_launcher/example/android/app/src/main/AndroidManifest.xml).
 Future<bool> canLaunch(String urlString) async {
-  if (urlString == null) {
-    return false;
-  }
   return await UrlLauncherPlatform.instance.canLaunch(urlString);
 }
 
@@ -132,9 +140,13 @@ Future<bool> canLaunch(String urlString) async {
 /// Or on IOS systems, if [launch] was called without `forceSafariVC` being set to `true`,
 /// this call will not do anything either, simply because there is no
 /// WebView/SafariViewController available to be closed.
-///
-/// SafariViewController is only available on IOS version >= 9.0, this method does not do anything
-/// on IOS version below 9.0
 Future<void> closeWebView() async {
   return await UrlLauncherPlatform.instance.closeWebView();
 }
+
+/// This allows a value of type T or T? to be treated as a value of type T?.
+///
+/// We use this so that APIs that have become non-nullable can still be used
+/// with `!` and `?` on the stable branch.
+// TODO(ianh): Remove this once we roll stable in late 2021.
+T? _ambiguate<T>(T? value) => value;

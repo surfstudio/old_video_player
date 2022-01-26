@@ -1,4 +1,4 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 
 import 'fake_maps_controllers.dart';
 
@@ -35,7 +36,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.cameraPosition,
         const CameraPosition(target: LatLng(10.0, 15.0)));
@@ -62,7 +63,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.cameraPosition,
         const CameraPosition(target: LatLng(10.0, 15.0)));
@@ -80,7 +81,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.compassEnabled, false);
 
@@ -109,7 +110,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.mapToolbarEnabled, false);
 
@@ -144,7 +145,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(
         platformGoogleMap.cameraTargetBounds,
@@ -193,7 +194,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.mapType, MapType.hybrid);
 
@@ -222,7 +223,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.minMaxZoomPreference,
         const MinMaxZoomPreference(1.0, 3.0));
@@ -253,7 +254,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.rotateGesturesEnabled, false);
 
@@ -282,7 +283,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.scrollGesturesEnabled, false);
 
@@ -311,7 +312,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.tiltGesturesEnabled, false);
 
@@ -339,7 +340,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.trackCameraPosition, false);
 
@@ -369,7 +370,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.zoomGesturesEnabled, false);
 
@@ -398,7 +399,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.zoomControlsEnabled, false);
 
@@ -427,7 +428,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.myLocationEnabled, false);
 
@@ -457,7 +458,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.myLocationButtonEnabled, true);
 
@@ -485,7 +486,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.padding, <double>[0, 0, 0, 0]);
   });
@@ -501,7 +502,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.padding, <double>[0, 0, 0, 0]);
 
@@ -542,7 +543,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.trafficEnabled, false);
 
@@ -571,7 +572,7 @@ void main() {
     );
 
     final FakePlatformGoogleMap platformGoogleMap =
-        fakePlatformViewsController.lastCreatedView;
+        fakePlatformViewsController.lastCreatedView!;
 
     expect(platformGoogleMap.buildingsEnabled, false);
 
@@ -586,5 +587,39 @@ void main() {
     );
 
     expect(platformGoogleMap.buildingsEnabled, true);
+  });
+
+  testWidgets(
+    'Default Android widget is AndroidView',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(target: LatLng(10.0, 15.0)),
+          ),
+        ),
+      );
+
+      expect(find.byType(AndroidView), findsOneWidget);
+    },
+  );
+
+  testWidgets('Use PlatformViewLink on Android', (WidgetTester tester) async {
+    final MethodChannelGoogleMapsFlutter platform =
+        GoogleMapsFlutterPlatform.instance as MethodChannelGoogleMapsFlutter;
+    platform.useAndroidViewSurface = true;
+
+    await tester.pumpWidget(
+      const Directionality(
+        textDirection: TextDirection.ltr,
+        child: GoogleMap(
+          initialCameraPosition: CameraPosition(target: LatLng(10.0, 15.0)),
+        ),
+      ),
+    );
+
+    expect(find.byType(PlatformViewLink), findsOneWidget);
+    platform.useAndroidViewSurface = false;
   });
 }

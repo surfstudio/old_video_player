@@ -1,4 +1,4 @@
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -10,11 +10,6 @@
 #if !__has_feature(objc_arc)
 #error Code Requires ARC.
 #endif
-
-int64_t FLTCMTimeToMillis(CMTime time) {
-  if (time.timescale == 0) return 0;
-  return time.value * 1000 / time.timescale;
-}
 
 @interface FLTFrameUpdater : NSObject
 @property(nonatomic) int64_t textureId;
@@ -44,11 +39,14 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic, readonly) bool disposed;
 @property(nonatomic, readonly) bool isPlaying;
 @property(nonatomic) bool isLooping;
+@property(nonatomic) double currentPlaybackSpeed;
 @property(nonatomic, readonly) bool isInitialized;
 @property(assign, nonatomic) int seekTime;
 @property(assign, nonatomic) int startTime;
 @property(assign, nonatomic) BOOL isLoggingEnabled;
-- (instancetype)initWithURL:(NSURL*)url headers:(NSDictionary*)headers frameUpdater:(FLTFrameUpdater*)frameUpdater;
+- (instancetype)initWithURL:(NSURL*)url
+               frameUpdater:(FLTFrameUpdater*)frameUpdater
+                httpHeaders:(NSDictionary<NSString*, NSString*>*)headers;
 - (void)play;
 - (void)pause;
 - (void)setIsLooping:(bool)isLooping;
@@ -57,6 +55,8 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 
 static void* timeRangeContext = &timeRangeContext;
 static void* statusContext = &statusContext;
+static void* presentationSizeContext = &presentationSizeContext;
+static void* durationContext = &durationContext;
 static void* playbackLikelyToKeepUpContext = &playbackLikelyToKeepUpContext;
 static void* playbackBufferEmptyContext = &playbackBufferEmptyContext;
 static void* playbackBufferFullContext = &playbackBufferFullContext;
@@ -64,7 +64,7 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
 @implementation FLTVideoPlayer
 - (instancetype)initWithAsset:(NSString*)asset frameUpdater:(FLTFrameUpdater*)frameUpdater {
   NSString* path = [[NSBundle mainBundle] pathForResource:asset ofType:nil];
-    return [self initWithURL:[NSURL fileURLWithPath:path] headers:nil frameUpdater:frameUpdater];
+  return [self initWithURL:[NSURL fileURLWithPath:path] frameUpdater:frameUpdater httpHeaders:nil];
 }
 
 - (void)addObservers:(AVPlayerItem*)item {
@@ -76,6 +76,14 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
          forKeyPath:@"status"
             options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
             context:statusContext];
+  [item addObserver:self
+         forKeyPath:@"presentationSize"
+            options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
+            context:presentationSizeContext];
+  [item addObserver:self
+         forKeyPath:@"duration"
+            options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
+            context:durationContext];
   [item addObserver:self
          forKeyPath:@"playbackLikelyToKeepUp"
             options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
@@ -119,17 +127,17 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
   if (notification.name == AVPlayerItemFailedToPlayToEndTimeNotification) {
     NSError *error = notification.userInfo[AVPlayerItemFailedToPlayToEndTimeErrorKey];
     [self log:[NSString stringWithFormat:@"Player error occured: %@, %@", error.localizedDescription, [NSString stringWithUTF8String:error.domain.UTF8String]]];
-    _eventSink([FlutterError errorWithCode:@"VideoError" message:[@"Failed to load video: " stringByAppendingString:error.localizedDescription] details:[self createErrorInfoFromError:error]]);
+    _eventSink([FlutterError errorWithCode:@"InternetVideoError" message:[@"Failed to load video: " stringByAppendingString:error.localizedDescription] details:[self createErrorInfoFromError:error]]);
   } else {
     AVPlayerItemErrorLog *log = self.player.currentItem.errorLog;
 
     if ([log.events count]) {
       AVPlayerItemErrorLogEvent *e = log.events.lastObject;
       [self log:[NSString stringWithFormat:@"Player error occured: %@", e.errorComment]];
-      _eventSink([FlutterError errorWithCode:@"VideoError" message:[NSString stringWithFormat: @"Failed to load video: %@", e.errorComment] details:[self createErrorInfoFromLogEvent:e]]);
+      _eventSink([FlutterError errorWithCode:@"InternetVideoError" message:[NSString stringWithFormat: @"Failed to load video: %@", e.errorComment] details:[self createErrorInfoFromLogEvent:e]]);
     } else {
       [self log:@"Unknown player error occured"];
-      _eventSink([FlutterError errorWithCode:@"VideoError" message:@"Failed to load video: Вероятно, соединение с интернетом прервано." details:nil]);
+      _eventSink([FlutterError errorWithCode:@"InternetVideoError" message:@"Failed to load video: Вероятно, соединение с интернетом прервано." details:nil]);
     }
   }
 }
@@ -155,6 +163,16 @@ static void* playbackBufferFullContext = &playbackBufferFullContext;
   [info setObject:[NSNumber numberWithLong:event.errorStatusCode] forKey:@"code"];
 
    return info;
+}
+
+const int64_t TIME_UNSET = -9223372036854775807;
+
+static inline int64_t FLTCMTimeToMillis(CMTime time) {
+  // When CMTIME_IS_INDEFINITE return a value that matches TIME_UNSET from ExoPlayer2 on Android.
+  // Fixes https://github.com/flutter/flutter/issues/48670
+  if (CMTIME_IS_INDEFINITE(time)) return TIME_UNSET;
+  if (time.timescale == 0) return 0;
+  return time.value * 1000 / time.timescale;
 }
 
 static inline CGFloat radiansToDegrees(CGFloat radians) {
@@ -214,16 +232,17 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   _displayLink.paused = YES;
 }
 
-- (instancetype)initWithURL:(NSURL*)url headers:(NSDictionary*)headers frameUpdater:(FLTFrameUpdater*)frameUpdater {
-    AVPlayerItem* item;
-    if (headers) {
-        AVURLAsset* asset = [AVURLAsset URLAssetWithURL:url options:@{@"AVURLAssetHTTPHeaderFieldsKey" : headers}];
-        item = [AVPlayerItem playerItemWithAsset:asset];
-    } else {
-        item = [AVPlayerItem playerItemWithURL:url];
-    }
-    [self log:[NSString stringWithFormat:@"Player created (url: '%@', headers: '%@')", url.absoluteString, headers]];
-    return [self initWithPlayerItem:item frameUpdater:frameUpdater];
+- (instancetype)initWithURL:(NSURL*)url
+               frameUpdater:(FLTFrameUpdater*)frameUpdater
+                httpHeaders:(NSDictionary<NSString*, NSString*>*)headers {
+  NSDictionary<NSString*, id>* options = nil;
+  if (headers != nil && [headers count] != 0) {
+    options = @{@"AVURLAssetHTTPHeaderFieldsKey" : headers};
+  }
+  AVURLAsset* urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
+  AVPlayerItem* item = [AVPlayerItem playerItemWithAsset:urlAsset];
+  [self log:[NSString stringWithFormat:@"Player created (url: '%@', headers: '%@')", url.absoluteString, headers]];
+  return [self initWithPlayerItem:item frameUpdater:frameUpdater];
 }
 
 - (CGAffineTransform)fixTransform:(AVAssetTrack*)videoTrack {
@@ -334,13 +353,22 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
       case AVPlayerItemStatusReadyToPlay:
         [self log:@"Player status: ready to play"];
         [item addOutput:_videoOutput];
-        [self sendInitialized];
+        [self setupEventSinkIfReadyToPlay];
         [self updatePlayingState];
             if (self.startTime != -1) {
                 [self.player seekToTime:CMTimeMake(self.startTime, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
                 self.startTime = -1;
             }
         break;
+    }
+  } else if (context == presentationSizeContext || context == durationContext) {
+    AVPlayerItem* item = (AVPlayerItem*)object;
+    if (item.status == AVPlayerItemStatusReadyToPlay) {
+      // Due to an apparent bug, when the player item is ready, it still may not have determined
+      // its presentation size or duration. When these properties are finally set, re-check if
+      // all required properties and instantiate the event sink if it is not already set up.
+      [self setupEventSinkIfReadyToPlay];
+      [self updatePlayingState];
     }
   } else if (context == playbackLikelyToKeepUpContext) {
     if ([[_player currentItem] isPlaybackLikelyToKeepUp]) {
@@ -370,6 +398,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   if(!_isPipActive) {
       if (_isPlaying) {
           [_player play];
+          [self setPlaybackSpeed:_currentPlaybackSpeed];
       } else {
           [_player pause];
       }
@@ -377,7 +406,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   }
 }
 
-- (void)sendInitialized {
+- (void)setupEventSinkIfReadyToPlay {
   if (_eventSink && !_isInitialized) {
     CGSize size = [self.player currentItem].presentationSize;
     CGFloat width = size.width;
@@ -471,6 +500,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     return;
   }
 
+  [self setCurrentPlaybackSpeed:speed];
   _player.rate = speed;
 }
 
@@ -483,7 +513,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   }
 }
 
-- (void)onTextureUnregistered {
+- (void)onTextureUnregistered:(NSObject<FlutterTexture>*)texture {
   dispatch_async(dispatch_get_main_queue(), ^{
     [self dispose];
   });
@@ -502,7 +532,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   // This line ensures the 'initialized' event is sent when the event
   // 'AVPlayerItemStatusReadyToPlay' fires before _eventSink is set (this function
   // onListenWithArguments is called)
-  [self sendInitialized];
+  [self setupEventSinkIfReadyToPlay];
   return nil;
 }
 
@@ -620,10 +650,10 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     player.isLoggingEnabled = input.enableLog.boolValue;
     return [self onPlayerSetup:player frameUpdater:frameUpdater];
   } else if (input.uri) {
-    NSDictionary* headers = input.headers;
+    NSDictionary* headers = input.httpHeaders;
     player = [[FLTVideoPlayer alloc] initWithURL:[NSURL URLWithString:input.uri]
-                                         headers:headers
-                                    frameUpdater:frameUpdater];
+                                    frameUpdater:frameUpdater
+                                     httpHeaders:input.httpHeaders];
     if (input.duration.intValue > 0)
       player.startTime = input.duration.intValue;
     player.isLoggingEnabled = input.enableLog.boolValue;

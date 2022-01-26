@@ -1,4 +1,4 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -14,13 +14,16 @@ class LatLng {
   /// The latitude is clamped to the inclusive interval from -90.0 to +90.0.
   ///
   /// The longitude is normalized to the half-open interval from -180.0
-  /// (inclusive) to +180.0 (exclusive)
+  /// (inclusive) to +180.0 (exclusive).
   const LatLng(double latitude, double longitude)
       : assert(latitude != null),
         assert(longitude != null),
         latitude =
             (latitude < -90.0 ? -90.0 : (90.0 < latitude ? 90.0 : latitude)),
-        longitude = (longitude + 180.0) % 360.0 - 180.0;
+        // Avoids normalization if possible to prevent unnecessary loss of precision
+        longitude = longitude >= -180 && longitude < 180
+            ? longitude
+            : (longitude + 180.0) % 360.0 - 180.0;
 
   /// The latitude in degrees between -90.0 and 90.0, both inclusive.
   final double latitude;
@@ -29,16 +32,18 @@ class LatLng {
   final double longitude;
 
   /// Converts this object to something serializable in JSON.
-  dynamic toJson() {
+  Object toJson() {
     return <double>[latitude, longitude];
   }
 
   /// Initialize a LatLng from an \[lat, lng\] array.
-  static LatLng fromJson(dynamic json) {
+  static LatLng? fromJson(Object? json) {
     if (json == null) {
       return null;
     }
-    return LatLng(json[0], json[1]);
+    assert(json is List && json.length == 2);
+    final list = json as List;
+    return LatLng(list[0], list[1]);
   }
 
   @override
@@ -66,7 +71,7 @@ class LatLngBounds {
   ///
   /// The latitude of the southwest corner cannot be larger than the
   /// latitude of the northeast corner.
-  LatLngBounds({@required this.southwest, @required this.northeast})
+  LatLngBounds({required this.southwest, required this.northeast})
       : assert(southwest != null),
         assert(northeast != null),
         assert(southwest.latitude <= northeast.latitude);
@@ -78,8 +83,8 @@ class LatLngBounds {
   final LatLng northeast;
 
   /// Converts this object to something serializable in JSON.
-  dynamic toJson() {
-    return <dynamic>[southwest.toJson(), northeast.toJson()];
+  Object toJson() {
+    return <Object>[southwest.toJson(), northeast.toJson()];
   }
 
   /// Returns whether this rectangle contains the given [LatLng].
@@ -102,13 +107,15 @@ class LatLngBounds {
 
   /// Converts a list to [LatLngBounds].
   @visibleForTesting
-  static LatLngBounds fromList(dynamic json) {
+  static LatLngBounds? fromList(Object? json) {
     if (json == null) {
       return null;
     }
+    assert(json is List && json.length == 2);
+    final list = json as List;
     return LatLngBounds(
-      southwest: LatLng.fromJson(json[0]),
-      northeast: LatLng.fromJson(json[1]),
+      southwest: LatLng.fromJson(list[0])!,
+      northeast: LatLng.fromJson(list[1])!,
     );
   }
 

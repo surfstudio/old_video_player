@@ -1,4 +1,4 @@
-// Copyright 2020 The Chromium Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -16,6 +16,8 @@ class SubRipCaptionFile extends ClosedCaptionFile {
       : _captions = _parseCaptionsFromSubRipString(fileContents);
 
   /// The entire body of the SubRip file.
+  // TODO(cyanglaz): Remove this public member as it doesn't seem need to exist.
+  // https://github.com/flutter/flutter/issues/90471
   final String fileContents;
 
   @override
@@ -30,19 +32,18 @@ List<Caption> _parseCaptionsFromSubRipString(String file) {
     if (captionLines.length < 3) break;
 
     final int captionNumber = int.parse(captionLines[0]);
-    final _StartAndEnd startAndEnd =
-        _StartAndEnd.fromSubRipString(captionLines[1]);
+    final _CaptionRange captionRange =
+        _CaptionRange.fromSubRipString(captionLines[1]);
 
     final String text = captionLines.sublist(2).join('\n');
 
     final Caption newCaption = Caption(
       number: captionNumber,
-      start: startAndEnd.start,
-      end: startAndEnd.end,
+      start: captionRange.start,
+      end: captionRange.end,
       text: text,
     );
-
-    if (newCaption.start != null && newCaption.end != null) {
+    if (newCaption.start != newCaption.end) {
       captions.add(newCaption);
     }
   }
@@ -50,21 +51,21 @@ List<Caption> _parseCaptionsFromSubRipString(String file) {
   return captions;
 }
 
-class _StartAndEnd {
+class _CaptionRange {
   final Duration start;
   final Duration end;
 
-  _StartAndEnd(this.start, this.end);
+  _CaptionRange(this.start, this.end);
 
   // Assumes format from an SubRip file.
   // For example:
   // 00:01:54,724 --> 00:01:56,760
-  static _StartAndEnd fromSubRipString(String line) {
+  static _CaptionRange fromSubRipString(String line) {
     final RegExp format =
         RegExp(_subRipTimeStamp + _subRipArrow + _subRipTimeStamp);
 
     if (!format.hasMatch(line)) {
-      return _StartAndEnd(null, null);
+      return _CaptionRange(Duration.zero, Duration.zero);
     }
 
     final List<String> times = line.split(_subRipArrow);
@@ -72,7 +73,7 @@ class _StartAndEnd {
     final Duration start = _parseSubRipTimestamp(times[0]);
     final Duration end = _parseSubRipTimestamp(times[1]);
 
-    return _StartAndEnd(start, end);
+    return _CaptionRange(start, end);
   }
 }
 
@@ -84,7 +85,7 @@ class _StartAndEnd {
 // Duration(hours: 0, minutes: 1, seconds: 59, milliseconds: 084)
 Duration _parseSubRipTimestamp(String timestampString) {
   if (!RegExp(_subRipTimeStamp).hasMatch(timestampString)) {
-    return null;
+    return Duration.zero;
   }
 
   final List<String> commaSections = timestampString.split(',');

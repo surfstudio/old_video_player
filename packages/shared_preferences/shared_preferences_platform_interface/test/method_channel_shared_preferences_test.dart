@@ -1,11 +1,11 @@
-// Copyright 2017 The Chromium Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/method_channel_shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +15,7 @@ void main() {
       'plugins.flutter.io/shared_preferences',
     );
 
-    const Map<String, dynamic> kTestValues = <String, dynamic>{
+    const Map<String, Object> kTestValues = <String, Object>{
       'flutter.String': 'hello world',
       'flutter.Bool': true,
       'flutter.Int': 42,
@@ -23,10 +23,10 @@ void main() {
       'flutter.StringList': <String>['foo', 'bar'],
     };
 
-    InMemorySharedPreferencesStore testData;
+    late InMemorySharedPreferencesStore testData;
 
     final List<MethodCall> log = <MethodCall>[];
-    MethodChannelSharedPreferencesStore store;
+    late MethodChannelSharedPreferencesStore store;
 
     setUp(() async {
       testData = InMemorySharedPreferencesStore.empty();
@@ -37,18 +37,18 @@ void main() {
           return await testData.getAll();
         }
         if (methodCall.method == 'remove') {
-          final String key = methodCall.arguments['key'];
+          final String key = (methodCall.arguments['key'] as String?)!;
           return await testData.remove(key);
         }
         if (methodCall.method == 'clear') {
           return await testData.clear();
         }
         final RegExp setterRegExp = RegExp(r'set(.*)');
-        final Match match = setterRegExp.matchAsPrefix(methodCall.method);
-        if (match.groupCount == 1) {
-          final String valueType = match.group(1);
-          final String key = methodCall.arguments['key'];
-          final Object value = methodCall.arguments['value'];
+        final Match? match = setterRegExp.matchAsPrefix(methodCall.method);
+        if (match?.groupCount == 1) {
+          final String valueType = match!.group(1)!;
+          final String key = (methodCall.arguments['key'] as String?)!;
+          final Object value = (methodCall.arguments['value'] as Object?)!;
           return await testData.setValue(valueType, key, value);
         }
         fail('Unexpected method call: ${methodCall.method}');
@@ -59,8 +59,6 @@ void main() {
 
     tearDown(() async {
       await testData.clear();
-      store = null;
-      testData = null;
     });
 
     test('getAll', () async {
@@ -80,15 +78,15 @@ void main() {
       });
 
       expect(log, hasLength(4));
-      for (MethodCall call in log) {
+      for (final MethodCall call in log) {
         expect(call.method, 'remove');
       }
     });
 
     test('setValue', () async {
       expect(await testData.getAll(), isEmpty);
-      for (String key in kTestValues.keys) {
-        final dynamic value = kTestValues[key];
+      for (final String key in kTestValues.keys) {
+        final Object value = kTestValues[key]!;
         expect(await store.setValue(key.split('.').last, key, value), true);
       }
       expect(await testData.getAll(), kTestValues);

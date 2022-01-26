@@ -1,3 +1,19 @@
+## 2.1.0
+
+* Add serverAuthCode attribute to user data
+
+## 2.0.1
+
+* Updates `init` function in `MethodChannelGoogleSignIn` to parametrize `clientId` property.
+
+## 2.0.0
+
+* Migrate to null-safety.
+
+## 1.1.3
+
+* Update Flutter SDK constraint.
+
 ## 1.1.2
 
 * Update lower bound of dart dependency to 2.1.0.
